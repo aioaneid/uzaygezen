@@ -1,0 +1,5 @@
+#summary Usage information.
+
+= Multi-Dimensional Space Specification =
+
+The library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object.
