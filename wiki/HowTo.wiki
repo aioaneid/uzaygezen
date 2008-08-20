@@ -100,6 +100,8 @@ At this point very little performance testing has been done, and although the in
 
 From a stability point of view, although this version is marked as 0.1, there are extensive unit tests for most of the functionality with very good coverage. The unit tests should also serve as further usage examples.
 
+Dependencies: The library has only 2 dependencies: Google Collections 20080819 and Apache Commons Lang 2.4.
+
 == Useful Links ==
 
   * [http://www.ddj.com/184410998 Space-Filling Curves in Geospatial Applications]
