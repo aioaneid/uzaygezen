@@ -1,4 +1,5 @@
 #summary Usage information.
+#labels Featured
 
 == Multi-Dimensional Space Specification ==
 
