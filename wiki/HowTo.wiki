@@ -8,7 +8,7 @@ Before doing anything useful the library needs to know the specification of the 
 
 The coordinates of a point in the multi-dimensional space need to be first represented as a `BitVector[]`. If the coordinates are of type `long` or `BitSet`, the corresponding bit vectors can be created using `BitVectorFactories.OPTIMAL.apply(precision)`, and then using the `copyFrom(long/BitSet)` overloads. There is no direct support for other numerical types such as `BigInteger` right now, so in such situations one will most likely need to populate the bit vector bit by bit.
 
-To transform from a bit vector back into `long` use `toExactLong`; for `BitSet` use `toBitSet`.
+To transform from a bit vector back into `long` use `toExactLong()`; for `BitSet` use `toBitSet()`.
 
 == Compact Hilbert Index Mappings ==
 
