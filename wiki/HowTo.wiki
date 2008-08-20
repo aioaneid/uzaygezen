@@ -2,4 +2,8 @@
 
 == Multi-Dimensional Space Specification ==
 
-The library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object.
+Before doing anything useful the library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object. For compact Hilbert index and inverse calculation there are no limitations on the number of bits. For query building, the total precision must not exceed 62.
+
+== Fixed Size Bit Vector ==
+
+The coordinates of a point in the multi-dimensional space need to be first represented as a {{{BitVector[]}}}. If the coordinates are of type {{{long}}} or {{{BitSet}}}, the corresponding bit vectors can be created using {{{BitVectorFactories.OPTIMAL.apply(precision)}}}, and then using the {{{copyFrom(long/BitSet)}}} overloads. There is no direct support for other numerical types such as {{{BigInteger}}} right now, so they will have to be converted to {{{BitSet}}} first.
