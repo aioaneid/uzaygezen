@@ -16,7 +16,7 @@ For performance reasons some methods need a pre-allocated output parameter to be
 
 To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated point array.
 
-== Queries ==
+== Queries in Read-Write Tables ==
 
 To use a multi-dimensional index in a relational database, one needs to store the (big-endian) multi-dimensional index either as the primary key (recommended), or as an indexed column in the table. Then there are a few options to consider:
   * The original coordinates do not necessarily need to be stored in the table. However if the number of ranges and optionally sub-ranges (more generally, filters combined through a *!FilterCombiner*) generated for queries tends to be too high, it might be useful to either limit, or not use the sub-ranges feature at all, besides limiting the number of high level ranges, and append to the where clause of the SQL query further filtering of the points to be selected based on their coordinates.
@@ -26,3 +26,29 @@ To use a multi-dimensional index in a relational database, one needs to store th
     * For the other databases it might make sense to create a UNION ALL of the main ranges, and express each range as a where clause consisting in a set of sub-ranges, i.e. use *!ListConcatCombiner* as the filter combiner. A typical query would be `select columns from (select hilbertIndex, columns from table where hilbertIndex between lo_0 and hi_0) where hilbertIndex between sublo_00 and subhi_00 or hilbertIndex between sublo_01 and subhi_01 ... UNION ALL ... (the same but replace lo_0 with lo_n, hi_0 with hi_n, sublo_0i with sublo_ni and subhi_0i with subhi_ii)`. Note that all sub-ranges of a range are fully covered by that range.
 
 In either case the query region is represented by the *!RegionInspector* abstraction, with the simple *!SimpleRegionInspector* implementation provided out of the box for queries consisting of one or more hyper-rectangles. Note that the query doesn't have to look like a (small) set of hyper-rectangles, and can in general have any shape, with the inherent performance price and the need to implement a custom region inspector.
+
+Here's a snippet of what the code could look like:
+{{{
+// int[] min, int[] max represent the query hyper-rectangle
+List<LongRange> criterion = new ArrayList<LongRange>(min.length);
+for (int i = 0; i < min.length; ++i) {
+    criterion.add(LongRange.of(min[i], max[i] + 1));
+}
+RegionInspector<Object> regionInspector = SimpleRegionInspector.create(
+    ImmutableList.<List<LongRange>>of(criterion), 1L,
+    Functions.constant(FILTER));
+final int maxFilteredRanges = 20;
+// PlainFilterCombiner since we're not using sub-ranges here
+QueryBuilder<Object> queryBuilder = BacktrackingQueryBuilder.create(
+    regionInspector, PlainFilterCombiner.INSTANCE,
+    maxFilteredRanges, true);
+// sfc is of type SpaceFillingCurve, such as an instance of CompactHilbertIndex
+sfc.accept(new ZoomingSpaceVisitorAdapter(sfc, queryBuilder));
+Query<Object> query = queryBuilder.get();
+List<FilteredIndexRange<Object>> ranges = query.getFilteredIndexRanges();
+/*
+Construct SQL query that selects between `ranges.get(i).getIndexRange().getStart()` and `ranges.get(i).getIndexRange().getEnd() - 1` inclusive at both ends, and for those ranges returning `true` from `ranges.get(i).isPotentialOverSelectivity()`, add a where clause based on the coordinate values, if stored redundantly in the database. Note that those ranges that return `false` from `ranges.get(i).isPotentialOverSelectivity()` are guaranteed to not select any extraneous points.
+*/
+}}}
+
+== Queries in Mostly Read-Only Tables ==
