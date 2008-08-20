@@ -93,6 +93,6 @@ RegionInspector regionInspector =
 
 == Other Considerations ==
 
-At this point very little performance testing has been done, and although the index and inverse computation routines are pretty stable, significant changes might be made in the query building mechanism in the future.
+At this point very little performance testing has been done, and although the index and inverse computation routines are pretty stable, significant changes might be made in the query building mechanism in the future. Also, note that many relational databases provide built-in R-tree based multi-indexing support, which should be more efficient than the approach employed here.
 
 From a stability point of view, although this version is marked as 0.1, there are extensive unit tests for most of the functionality with very good coverage. The unit tests should also serve as further usage examples.
