@@ -25,11 +25,13 @@ To use a multi-dimensional index in a relational database, one needs to store th
     * Some databases have special support for array-type prepared statement parameters, in which case redundantly storing the coordinates as separate columns and using the TABLE feature probably works best (see H2's *!TestMultiDimension* and *!MultiDimension* classes).
     * Some databases might combine multiple UNION ALL statements into one during query optimisation, and if the number of ranges is high then do a full-table scan, even though only a small subset of the table is selected. In such a database the coordinates should be stored redundantly and the sub-ranges feature should not be used at all, i.e. use *!PlainFilterCombiner* as the filter combiner and `PlainFilterCombiner.FILTER` as the unique filter object). A typical query would look like this:
 {{{
-select columns from table where (hilbertIndex between lo_0 and hi_0 or ... hilbertIndex between lo_n and hi_n) and x between xlo and xhi and y between ylo and yhi and z between zlo and zhi and t between tlo and thi ...
+select columns from table where (hilbertIndex between lo_0 and hi_0 or ... hilbertIndex between lo_n and hi_n)
+    and x between xlo and xhi and y between ylo and yhi and z between zlo and zhi and t between tlo and thi ...
 }}}
     * For the other databases it might make sense to create a UNION ALL of the main ranges, and express each range as a where clause consisting in a set of sub-ranges, i.e. use *!ListConcatCombiner* as the filter combiner. A typical query would be
 {{{
-select columns from (select hilbertIndex, columns from table where hilbertIndex between lo_0 and hi_0) where hilbertIndex between sublo_00 and subhi_00 or hilbertIndex between sublo_01 and subhi_01 ...
+select columns from (select hilbertIndex, columns from table where hilbertIndex between lo_0 and hi_0)
+    where hilbertIndex between sublo_00 and subhi_00 or hilbertIndex between sublo_01 and subhi_01 ...
 UNION ALL
 ... (the same but replace lo_0 with lo_n, hi_0 with hi_n, sublo_0i with sublo_ni and subhi_0i with subhi_ii)
 }}}
