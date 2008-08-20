@@ -50,3 +50,5 @@ List<FilteredIndexRange<Object>> ranges = query.getFilteredIndexRanges();
 Then construct an SQL query that selects between `ranges.get(i).getIndexRange().getStart()` and `ranges.get(i).getIndexRange().getEnd() - 1` inclusive at both ends, and for those ranges returning `true` from `ranges.get(i).isPotentialOverSelectivity()` add a where clause based on the coordinate values if stored redundantly in the database. Note that those ranges that return `false` from `ranges.get(i).isPotentialOverSelectivity()` are guaranteed to not select any extraneous points. Also, if maxFilteredRanges is made large enough then it is guaranteed that no ranges will have potential over-selectivity, but the number of ranges can easily grow too large.
 
 == Queries in Mostly Read-Only Tables ==
+
+Optionally for a mostly read-only table, after each modification the table can be scanned and a limited rolled-up version of the table information extracted in memory and used to significantly speed up both query building and query execution, the latter as a result of better queries being produced.
