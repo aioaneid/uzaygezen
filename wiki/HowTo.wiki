@@ -35,7 +35,7 @@ UNION ALL
 }}}
 Note that all sub-ranges of a range are fully covered by that range.
 
-In either case the query region is represented by the *!RegionInspector* abstraction, with the simple *!SimpleRegionInspector* implementation provided out of the box for queries consisting of one or more hyper-rectangles. Note that the query doesn't have to look like a (small) set of hyper-rectangles, and can in general have any shape, with the inherent performance price and the need to implement a custom region inspector.
+In either case the query region is represented by the *!RegionInspector* abstraction, with the plain-vanilla *!SimpleRegionInspector* implementation provided out of the box for queries consisting of one or more hyper-rectangles. Note that the query doesn't have to look like a (small) set of hyper-rectangles, and can in general have any shape, with the inherent performance price and the need to implement a custom region inspector.
 
 Here's a snippet of what the code could look like:
 {{{
