@@ -51,4 +51,33 @@ Then construct an SQL query that selects between `ranges.get(i).getIndexRange().
 
 == Queries in Mostly Read-Only Tables ==
 
-Optionally for a mostly read-only table, after each modification the table can be scanned and a limited rolled-up version of the table information extracted in memory and used to significantly speed up both query building and query execution, the latter as a result of better queries being produced.
+Optionally for a mostly read-only table, after each modification the table can be scanned and a limited rolled-up version of the table information extracted in memory and used to significantly speed up both query building and query execution, the latter as a result of better queries being produced. The idea is that the table is analysed to see which regions have points, and which regions have more points than others and the information is aggregated into a tree-shaped cache of specified size.
+
+Although not a complete example, this snippet of code shows the main steps involved in the analysis phase that involves one full table scan:
+{{{
+int[] elementLengths =
+    PrimitiveArrays.toIntArray(new HilbertIndexMasks(sfc.getSpec()).cardinalities());
+BitVector[] path = new BitVector[elementLengths.length];
+for (int i = 0; i < path.length; ++i) {
+  path[i] = BitVectorFactories.OPTIMAL.apply(elementLengths[path.length - i - 1]);
+}
+StreamingRollup<BitVector, CountingDoubleArray> rollup = BoundedRollup.create(
+    CountingDoubleArray.newEmptyValue(0), cacheSize);
+// for each row, ordered by the hilbertIndex column:
+  for (int i = 0; i < path.length; ++i) {
+    path[i] = path[i].clone();
+  }
+  BitVectorMath.split(hilbertIndex, path);
+  rollup.feedRow(Iterators.forArray(path, 0, path.length),
+      new CountingDoubleArray(ArrayUtils.EMPTY_DOUBLE_ARRAY));
+MapNode<BitVector, CountingDoubleArray> rolledupTree = rollup.finish();
+Pow2LengthBitSetRangeFactory<CountingDoubleArray> factory =
+    Pow2LengthBitSetRangeFactory.create(PrimitiveArrays.asList(elementLengths));
+Map<Pow2LengthBitSetRange, Pair<CountingDoubleArray, Boolean>> rolledupMap = factory.apply(rolledupTree);
+}}}
+
+Then all that's left is to decorate the region inspector for query building purposes:
+{{{
+RegionInspector regionInspector =
+    MapRegionInspector.create(rolledupMap, simpleRegionInspector, false);
+}}}
