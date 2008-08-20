@@ -6,4 +6,4 @@ Before doing anything useful the library needs to know the specification of the 
 
 == Fixed Size Bit Vector ==
 
-The coordinates of a point in the multi-dimensional space need to be first represented as a {{{BitVector[]}}}. If the coordinates are of type {{{long}}} or {{{BitSet}}}, the corresponding bit vectors can be created using {{{BitVectorFactories.OPTIMAL.apply(precision)}}}, and then using the {{{copyFrom(long/BitSet)}}} overloads. There is no direct support for other numerical types such as {{{BigInteger}}} right now, so they will have to be converted to {{{BitSet}}} first.
+The coordinates of a point in the multi-dimensional space need to be first represented as a `BitVector[]`. If the coordinates are of type `long` or `BitSet`, the corresponding bit vectors can be created using `BitVectorFactories.OPTIMAL.apply(precision)`, and then using the `copyFrom(long/BitSet)` overloads. There is no direct support for other numerical types such as `BigInteger` right now, so they will have to be converted to `BitSet` first.
