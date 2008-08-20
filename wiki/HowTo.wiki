@@ -22,14 +22,20 @@ To use a multi-dimensional index in a relational database, one needs to store th
   * The original coordinates do not necessarily need to be stored in the table. However if the number of ranges and optionally sub-ranges (more generally, filters combined through a *!FilterCombiner*) generated for queries tends to be too high, it might be useful to either limit, or not use the sub-ranges feature at all, besides limiting the number of high level ranges, and append to the where clause of the SQL query further filtering of the points to be selected based on their coordinates.
   * There are a few ways to construct the main part of the SQL queries, and which one to use can probably be decided only through experimentation:
     * Some databases have special support for array-type prepared statement parameters, in which case redundantly storing the coordinates as separate columns and using the TABLE feature probably works best (see H2's *!TestMultiDimension* and *!MultiDimension* classes).
-    * Some databases might combine multiple UNION ALL statements into one during query optimisation, and if the number of ranges is high then do a full-table scan, even though only a small subset of the table is selected. In such a database the coordinates should be stored redundantly and the sub-ranges feature should not be used at all, i.e. use *!PlainFilterCombiner* as the filter combiner and `PlainFilterCombiner.FILTER` as the unique filter object). A typical query would look like `select columns from table where (hilbertIndex between lo_0 and hi_0 or ... hilbertIndex between lo_n and hi_n) and x between xlo and xhi and y between ylo and yhi and z between zlo and zhi and t between tlo and thi ...`.
-    * For the other databases it might make sense to create a UNION ALL of the main ranges, and express each range as a where clause consisting in a set of sub-ranges, i.e. use *!ListConcatCombiner* as the filter combiner. A typical query would be `select columns from (select hilbertIndex, columns from table where hilbertIndex between lo_0 and hi_0) where hilbertIndex between sublo_00 and subhi_00 or hilbertIndex between sublo_01 and subhi_01 ... UNION ALL ... (the same but replace lo_0 with lo_n, hi_0 with hi_n, sublo_0i with sublo_ni and subhi_0i with subhi_ii)`. Note that all sub-ranges of a range are fully covered by that range.
+    * Some databases might combine multiple UNION ALL statements into one during query optimisation, and if the number of ranges is high then do a full-table scan, even though only a small subset of the table is selected. In such a database the coordinates should be stored redundantly and the sub-ranges feature should not be used at all, i.e. use *!PlainFilterCombiner* as the filter combiner and `PlainFilterCombiner.FILTER` as the unique filter object). A typical query would look like 
+{{{
+select columns from table where (hilbertIndex between lo_0 and hi_0 or ... hilbertIndex between lo_n and hi_n) and x between xlo and xhi and y between ylo and yhi and z between zlo and zhi and t between tlo and thi ...
+}}}.
+    * For the other databases it might make sense to create a UNION ALL of the main ranges, and express each range as a where clause consisting in a set of sub-ranges, i.e. use *!ListConcatCombiner* as the filter combiner. A typical query would be
+{{{
+select columns from (select hilbertIndex, columns from table where hilbertIndex between lo_0 and hi_0) where hilbertIndex between sublo_00 and subhi_00 or hilbertIndex between sublo_01 and subhi_01 ... UNION ALL ... (the same but replace lo_0 with lo_n, hi_0 with hi_n, sublo_0i with sublo_ni and subhi_0i with subhi_ii)}}}
+. Note that all sub-ranges of a range are fully covered by that range.
 
 In either case the query region is represented by the *!RegionInspector* abstraction, with the simple *!SimpleRegionInspector* implementation provided out of the box for queries consisting of one or more hyper-rectangles. Note that the query doesn't have to look like a (small) set of hyper-rectangles, and can in general have any shape, with the inherent performance price and the need to implement a custom region inspector.
 
 Here's a snippet of what the code could look like:
 {{{
-// int[] min, int[] max represent the query hyper-rectangle
+// int[] min, int[] max represent the query hyper-rectangle, both ends inclusive
 List<LongRange> criterion = new ArrayList<LongRange>(min.length);
 for (int i = 0; i < min.length; ++i) {
     criterion.add(LongRange.of(min[i], max[i] + 1));
@@ -81,3 +87,8 @@ Then all that's left is to decorate the region inspector for query building purp
 RegionInspector regionInspector =
     MapRegionInspector.create(rolledupMap, simpleRegionInspector, false);
 }}}
+
+== Other Considerations ==
+
+
+At this point very little performance testing has been done, and although the index and inverse computation routines are pretty stable, the query building mechanism is being actively developed so you might see some changes in there.
