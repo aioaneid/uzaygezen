@@ -13,7 +13,7 @@ To transform from a bit vector back into `long` use `toExactLong()`; for `BitSet
 
 == Compact Hilbert Index Mappings ==
 
-For performance reasons some methods need a pre-allocated output parameter to be passed. To compute an index, call `SpaceFillingCurve.index(point, 0, index)` with a pre-allocated index bit vector of size `MultiDimensionalSpec.sumBitsPerDimension()`.
+For performance reasons some methods need a pre-allocated output parameter to be passed in. To compute an index, call `SpaceFillingCurve.index(point, 0, index)` with a pre-allocated index bit vector of size `MultiDimensionalSpec.sumBitsPerDimension()`.
 
 To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated point array.
 
@@ -22,7 +22,7 @@ To extract the coordinates back from an index, use `SpaceFillingCurve.index(inde
 To use a multi-dimensional index in a relational database, one needs to store the (big-endian) multi-dimensional index either as the primary key (recommended), or as an indexed column in the table. Then there are a few options to consider:
   * The original coordinates do not necessarily need to be stored in the table. However if the number of ranges and optionally sub-ranges (more generally, filters combined through a *!FilterCombiner*) generated for queries tends to be too high, it might be useful to either limit, or not use the sub-ranges feature at all, besides limiting the number of high level ranges, and append to the where clause of the SQL query further filtering of the points to be selected based on their coordinates.
   * There are a few ways to construct the main part of the SQL queries, and which one to use can probably be decided only through experimentation:
-    * Some databases have special support for array-type prepared statement parameters, in which case redundantly storing the coordinates as separate columns and using the TABLE feature probably works best (see H2's *!TestMultiDimension* and *!MultiDimension* classes).
+    * Some databases have special support for array-type prepared statement parameters, in which case redundantly storing the coordinates as separate columns for extra filtering probably works best (see H2's *!TestMultiDimension* and *!MultiDimension* classes).
     * Some databases might combine multiple UNION ALL statements into one during query optimisation, and if the number of ranges is high then do a full-table scan, even though only a small subset of the table is selected. In such a database the coordinates should be stored redundantly and the sub-ranges feature should not be used at all, i.e. use *!PlainFilterCombiner* as the filter combiner and `PlainFilterCombiner.FILTER` as the unique filter object). A typical query would look like this:
 {{{
 select columns from table where (hilbertIndex between lo_0 and hi_0 or ... hilbertIndex between lo_n and hi_n)
