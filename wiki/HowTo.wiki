@@ -11,3 +11,7 @@ The coordinates of a point in the multi-dimensional space need to be first repre
 To transform from a bit vector back into `long` use `toExactLong`; for `BitSet` use `toBitSet`.
 
 == Compact Hilbert Index Mappings ===
+
+For performance reasons some methods need a pre-allocated output parameter to be passed. To compute an index, call `SpaceFillingCurve.index(point, 0, index)` with a pre-allocated index bit vector of size `MultiDimensionalSpec.sumBitsPerDimension()`.
+
+To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated point array.
