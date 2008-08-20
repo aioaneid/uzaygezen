@@ -2,7 +2,7 @@
 
 == Multi-Dimensional Space Specification ==
 
-Before doing anything useful the library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object. For compact Hilbert index and inverse calculation there are no limitations on the number of bits. For query building, the total precision must not exceed 62.
+Before doing anything useful the library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object. For compact Hilbert index and inverse calculation there are no limitations on the number of bits. For query building, the total precision must not exceed 62. In general it's a good idea to keep the precision of each dimension as small as possible.
 
 == Fixed Size Bit Vector ==
 
@@ -10,8 +10,13 @@ The coordinates of a point in the multi-dimensional space need to be first repre
 
 To transform from a bit vector back into `long` use `toExactLong`; for `BitSet` use `toBitSet`.
 
-== Compact Hilbert Index Mappings ===
+== Compact Hilbert Index Mappings ==
 
 For performance reasons some methods need a pre-allocated output parameter to be passed. To compute an index, call `SpaceFillingCurve.index(point, 0, index)` with a pre-allocated index bit vector of size `MultiDimensionalSpec.sumBitsPerDimension()`.
 
 To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated point array.
+
+== Queries ==
+
+To use a multi-dimensional index in a relational database, one needs to store the (big-endian) multi-dimensional index either as the primary key (recommended), or as an indexed column. Then there are a few options to consider:
+ * x
