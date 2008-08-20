@@ -95,4 +95,4 @@ RegionInspector regionInspector =
 
 At this point very little performance testing has been done, and although the index and inverse computation routines are pretty stable, significant changes might be made in the query building mechanism in the future.
 
-From a stability point of view, although this version is marked as 0.1, there are extensive unit tests for most of the functionality with very good coverage. The usage tests should also serve as further usage examples.
+From a stability point of view, although this version is marked as 0.1, there are extensive unit tests for most of the functionality with very good coverage. The unit tests should also serve as further usage examples.
