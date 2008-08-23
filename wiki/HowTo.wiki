@@ -100,7 +100,7 @@ At this point very little performance testing has been done, and although the in
 
 From a stability point of view, although this version is marked as 0.1, there are extensive unit tests for most of the functionality with very good coverage. The unit tests should also serve as further usage examples.
 
-Dependencies: The library has only 2 dependencies: Google Collections 20080819 and Apache Commons Lang 2.4.
+Dependencies: The library has only 2 dependencies: [http://code.google.com/p/google-collections Google Collections] 20080819 and [http://commons.apache.org/lang Apache Commons Lang] 2.4. The test code also depends on [http://www.easymock.org EasyMock] 2.0 and [http://www.junit.org JUnit] 3.8.1.
 
 == Useful Links ==
 
