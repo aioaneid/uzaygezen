@@ -85,7 +85,7 @@ StreamingRollup<BitVector, CountingDoubleArray> rollup = BoundedRollup.create(
 MapNode<BitVector, CountingDoubleArray> rolledupTree = rollup.finish();
 Pow2LengthBitSetRangeFactory<CountingDoubleArray> factory =
     Pow2LengthBitSetRangeFactory.create(PrimitiveArrays.asList(elementLengths));
-Map<Pow2LengthBitSetRange, Pair<CountingDoubleArray, Boolean>> rolledupMap = factory.apply(rolledupTree);
+Map<Pow2LengthBitSetRange, NodeValue<CountingDoubleArray>> rolledupMap = factory.apply(rolledupTree);
 }}}
 
 Then all that's left is to decorate the region inspector for query building purposes:
