@@ -333,15 +333,9 @@ public final class LongBitVector implements BitVector, Cloneable {
     // optimisation
     if (o.size() <= 64) {
       // 0, positives, Long.MAX_VALUE, Long.MIN_VALUE, negatives, -1
-      long localData = data;
-      long otherLong = o.toLong();
-      int localSignBit = (int) (localData >>> 63);
-      int otherSignBit = (int) (otherLong >>> 63);
-      if (localSignBit == otherSignBit) {
-        return localData < otherLong ? -1 : (localData == otherLong ? 0 : +1);
-      } else {
-        cmp = localSignBit - otherSignBit;
-      }
+      long x = data + Long.MIN_VALUE;
+      long y = o.toExactLong() + Long.MIN_VALUE;
+      cmp = x < y ? -1 : (x == y ? 0 : +1);
       assert Long.signum(cmp) == Long.signum(
           BitSetComparator.INSTANCE.compare(toBitSet(), o.toBitSet()));
     } else {

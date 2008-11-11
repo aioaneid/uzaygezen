@@ -31,6 +31,8 @@ import java.util.BitSet;
  * @author Daniel Aioanei
  */
 public interface BitVector extends Comparable<BitVector> {
+  // TODO: For methods that take [from, to) also allow from=to=size
+  // to represent the empty sub-sequence as in most APIs that deal with sequences.
   
   boolean isEmpty();
   
@@ -100,10 +102,8 @@ public interface BitVector extends Comparable<BitVector> {
   int nextClearBit(int fromIndex);
 
   /**
-   * increment value of {@code BitVector} by 1
-   * 
-   * @return false if increment operation overflowed the number defined by
-   * BitVector, true otherwise.
+   * If at least one bit is {@code false} then the value is incremented by one
+   * and {@code true} is returned; otherwise {@code false} is returned.
    */
   boolean increment(); 
   
@@ -120,9 +120,9 @@ public interface BitVector extends Comparable<BitVector> {
   void xor(BitVector o);
   
   /**
-   * Rotates n bits of content of BitVector.
+   * Rotates by {@code count} bits to the right.
    * 
-   * @param count
+   * @param count can be negative
    */
   void rotate(int count);
 
