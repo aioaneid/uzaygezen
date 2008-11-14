@@ -32,14 +32,20 @@ public enum BitVectorFactories implements Function<Integer, BitVector> {
       if (size <= 64) {
         return new LongBitVector(size);
       } else {
+        // TODO: Use LongArrayBitVector instead.
         return new BitSetBackedBitVector(size);
       }
     }
   }, SLOW {
     @Override
-    public BitVector apply(Integer from) {
+    public BitSetBackedBitVector apply(Integer from) {
       return new BitSetBackedBitVector(from);
     }
+  }, LONG_ARRAY {
+      @Override
+      public LongArrayBitVector apply(Integer from) {
+        return new LongArrayBitVector(from);
+      }
   };
   
   /**
