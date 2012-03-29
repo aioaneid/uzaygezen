@@ -85,7 +85,6 @@ public class MapRegionInspectorTest extends TestCase {
   public void testOneDisguisedCacheHit() {
     Pow2LengthBitSetRange rootRange = new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 1), 0);
     List<Pow2LengthBitSetRange> rootOrthotope = ImmutableList.of(rootRange);
-    Object coverFilter;
     EasyMock.expect(mock.assess(rootRange, rootOrthotope)).andReturn(Assessment.makeCovered(
         new Object(), false));
     EasyMock.replay(mock);

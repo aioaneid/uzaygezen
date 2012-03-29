@@ -51,10 +51,4 @@ public enum PlainFilterCombiner implements FilterCombiner<Object> {
   };
   
   public static final Object FILTER = new Object();
-  
-  /**
-   * TODO: Remove when http://bugs.sun.com/view_bug.do?bug_id=6330385 is fixed.
-   */
-  public abstract SelectiveFilter<Object> combine(FilteredIndexRange<Object> firstFilteredRange,
-      FilteredIndexRange<Object> secondFilteredRange, long gapEstimate);
 }

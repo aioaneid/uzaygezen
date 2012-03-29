@@ -201,7 +201,6 @@ public class BitVectorTest extends TestCase {
     BitVector b = factory.apply(0);
     assertEquals(0, b.length());
     for (int j = 1; j < 128; j++) {
-      BitVector v = factory.apply(j);
       assertEquals(0, b.length());
       for (int i = 0; i < b.length(); i++) {
         b.set(i);

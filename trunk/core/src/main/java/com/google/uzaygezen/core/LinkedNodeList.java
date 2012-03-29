@@ -175,7 +175,6 @@ final class LinkedNodeList<E> extends AbstractSequentialList<E>
 
   public boolean concat(NodeList<E> nodeList) {
     checkArgument(nodeList != this);
-    @SuppressWarnings("unchecked") // cast is fine, but Eclipse dislikes it
     LinkedNodeList<E> other = (LinkedNodeList<E>) nodeList;
     if (other.isEmpty()) {
       return false;
@@ -392,7 +391,6 @@ final class LinkedNodeList<E> extends AbstractSequentialList<E>
       if (this == node) {
         return false;
       }
-      @SuppressWarnings("unchecked") // cast is fine, but Eclipse dislikes it
       NodeImpl<E> other = (NodeImpl<E>) node;
       if ((list == null) && (other.list == null)) {
         return false;        

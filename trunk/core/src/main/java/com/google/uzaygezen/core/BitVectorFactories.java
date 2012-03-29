@@ -47,9 +47,4 @@ public enum BitVectorFactories implements Function<Integer, BitVector> {
         return new LongArrayBitVector(from);
       }
   };
-  
-  /**
-   * TODO: Remove when http://bugs.sun.com/view_bug.do?bug_id=6330385 is fixed.
-   */
-  public abstract BitVector apply(Integer input);
 }
