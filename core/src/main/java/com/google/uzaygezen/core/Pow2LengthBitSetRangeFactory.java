@@ -88,7 +88,6 @@ public class Pow2LengthBitSetRangeFactory<V>
           || (inputNode.getChildren().isEmpty() && outputElement.level >= 0));
       for (Entry<BitVector, MapNode<BitVector, V>> entry : inputNode.getChildren().entrySet()) {
         inputStack.push(entry.getValue());
-        int linkBitCount = elementLengths[n - outputElement.level];
         BitVector childBitSet = outputElement.bitVector.clone();
         BitVector key = entry.getKey();
         for (int i = key.size() == 0 ? -1 : key.nextSetBit(0); i != -1;

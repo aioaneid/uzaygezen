@@ -97,12 +97,12 @@ public class FilteredIndexRange<T> {
     return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public static <T> Function<FilteredIndexRange<T>, T> filterExtractor() {
     return (Function) FILTER_EXTRACTOR;
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public static <T> Predicate<FilteredIndexRange<T>> potentialOverSelectivityExtractor() {
     return (Predicate) IS_POTENTIAL_OVER_SELECTIVITY;
   }
