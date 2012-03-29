@@ -111,7 +111,7 @@ public class BoundedRollupTest extends TestCase {
     rollup.feedRow(ImmutableList.of(10).iterator(), newCountingArray());
     rollup.feedRow(ImmutableList.of(10).iterator(), newCountingArray());
     MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(newCountingArray(2),
+    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(newCountingArray(3),
         ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of(10, leaf(2), 5, leaf()));
     assertEquals(expected, actual);
   }

@@ -105,7 +105,7 @@ public class CountingDoubleArray implements AdditiveValue<CountingDoubleArray> {
       return false;
     }
     CountingDoubleArray other = (CountingDoubleArray) o;
-    return count == count && Arrays.equals(measures, other.measures);
+    return count == other.count && Arrays.equals(measures, other.measures);
   }
 
   @Override
