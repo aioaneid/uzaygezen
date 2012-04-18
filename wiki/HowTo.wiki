@@ -17,6 +17,33 @@ For performance reasons some methods need a pre-allocated output parameter to be
 
 To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated point array.
 
+Here's an example showing how to compute the hilbert index for two dimensions, each with just 2 bits, together with the inverse hilbert index, recovering the original point:
+
+{{{
+CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {2, 2});
+List<Integer> bitsPerDimension = chc.getSpec().getBitsPerDimension();
+BitVector[] p = new BitVector[bitsPerDimension.size()];
+for (int i = p.length; --i >= 0;) {
+	p[i] = BitVectorFactories.OPTIMAL.apply(bitsPerDimension.get(i));
+}
+p[0].copyFrom(0b10);
+p[1].copyFrom(0b11);
+BitVector chi = BitVectorFactories.OPTIMAL.apply(chc.getSpec().sumBitsPerDimension());
+chc.index(p, 0, chi);
+System.out.println(String.format(Locale.ROOT, "index([0b%s, 0b%s])=0b%s", p[0], p[1], chi));
+// Next line overwrites whatever is already written in p.
+chc.indexInverse(chi, p);
+System.out.println(String.format(
+	Locale.ROOT, "indexInverse(0b%s)=[0b%s, 0b%s]", chi, p[0], p[1]));
+}}}
+
+The example above prints:
+
+{{{
+index([0b10, 0b11])=0b1001
+indexInverse(0b1001)=[0b10, 0b11]
+}}}
+
 == Queries in Read-Write Tables ==
 
 Space filling curves can be used to index multidimensional data so that regions described mainly as range constraints on some or all of the dimensions can be queried more efficiently than if one indexed only one dimension. The challenge is to encode the data in such a way that small regions in the multi-dimensional space result in a small number of ranges for a plain-vanilla uni-dimensional relational database index. One way of achieving this is by storing the (big-endian) multi-dimensional index either as the primary key (recommended), or as an indexed column in the table. Then there are a few options to consider:
