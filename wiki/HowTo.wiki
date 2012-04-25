@@ -7,9 +7,9 @@ Before doing anything useful the library needs to know the specification of the 
 
 == Fixed Size Bit Vector ==
 
-The coordinates of a point in the multi-dimensional space need to be first represented as a `BitVector[]`. If the coordinates are of type `long` or `BitSet`, the corresponding bit vectors can be created using `BitVectorFactories.OPTIMAL.apply(precision)`, and then using the `copyFrom(long/BitSet)` overloads. There is no direct support for other numerical types such as `BigInteger` right now, so in such situations one will most likely need to populate the bit vector bit by bit.
+The coordinates of a point in the multi-dimensional space need to be first represented as a `BitVector[]`. If the coordinates are of type `long` or `BitSet`, the corresponding bit vectors can be created using `BitVectorFactories.OPTIMAL.apply(precision)`, and then using the `copyFrom(long/BitSet)` overloads. Larger values are accepted via their little endian representation by the method `copyFrom(long[])`, with a word size of 64 bits. Big endian representations are accepted via the method `copyFromBigEndian(byte[])`, with a word size of 8 bits.
 
-To transform from a bit vector back into `long` use `toExactLong()`; for `BitSet` use `toBitSet()`.
+To transform from a bit vector into `long` use `toExactLong()`; for `BitSet` use `toBitSet()`; for little endian `long[]` use `toLongArray()`; for big endian `byte[]` use `toBigEndianByteArray()`.
 
 == Compact Hilbert Index Mappings ==
 
