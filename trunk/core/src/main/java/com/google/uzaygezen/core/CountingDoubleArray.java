@@ -16,14 +16,14 @@
 
 package com.google.uzaygezen.core;
 
+import java.util.Arrays;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
-import java.util.Arrays;
 
 /**
  * The natural ordering of this class is <em>inconsistent with equals</em>. This

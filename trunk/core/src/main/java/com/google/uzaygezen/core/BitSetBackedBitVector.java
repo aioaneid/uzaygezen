@@ -16,9 +16,12 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-
+import java.util.Arrays;
 import java.util.BitSet;
+
+import org.apache.commons.lang3.ArrayUtils;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Adapts {@link java.util.BitSet} to the {@link BitVector} abstraction.
@@ -251,7 +254,7 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
   
   @Override
   public String toString() {
-    return "size: " + size + "bitset: " + bitset;
+    return "size: " + size + " bitset: " + bitset;
   }
 
   @Override
@@ -418,13 +421,32 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
 
   @Override
   public long[] toLongArray() {
+    long[] array = bitset.toLongArray();
+    // Pad it to correct length.
     int n = (size + 63) >>> 6;
-    long[] array = new long[n];
-    for (int i = bitset.nextSetBit(0); i >= 0; i = bitset.nextSetBit(i + 1)) {
-      int arrayIndex = i >>> 6;
-      array[arrayIndex] |= 1L << (i & 63);
+    if (array.length < n) {
+    	return Arrays.copyOf(array, n);
+    } else {
+    	assert array.length == n;
     }
     return array;
+//    int n = (size + 63) >>> 6;
+//    long[] array = new long[n];
+//    for (int i = bitset.nextSetBit(0); i >= 0; i = bitset.nextSetBit(i + 1)) {
+//      int arrayIndex = i >>> 6;
+//      array[arrayIndex] |= 1L << (i & 63);
+//    }
+//    return array;
+  }
+  
+  @Override
+  public byte[] toBigEndianByteArray() {
+    int n = MathUtils.bitCountToByteCount(size);
+    byte[] littleEndian = bitset.toByteArray();
+    assert n >= littleEndian.length;
+    byte[] a = Arrays.copyOf(littleEndian, n);
+    ArrayUtils.reverse(a);
+    return a;
   }
   
   @Override
@@ -437,19 +459,31 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
     Preconditions.checkArgument(
         Long.numberOfLeadingZeros(array[len - 1]) >= (len << 6) - size,
         "Some bit positions are too high.");
+    BitSet bs = BitSet.valueOf(array);
     bitset.clear();
-    // In Java 7 use BitSet.valueOf(long[]).
-    for (int i = 0; i < len; ++i) {
-      long arrayElement = array[i];
-      int offset = i << 6;
-      long oneBitMask = 1L << 63;
-      for (int j = 64; --j >= 0; ) {
-        if ((arrayElement & oneBitMask) != 0) {
-          bitset.set(offset + j);
-        }
-        oneBitMask >>>= 1;
-      }
+    bitset.or(bs);
+  }
+
+  @Override
+  public void copyFromBigEndian(byte[] array) {
+    int len = MathUtils.bitCountToByteCount(size);
+    Preconditions.checkArgument(array.length == len, "Length must be %s.", len);
+    if (len == 0) {
+      return;
     }
+    // Unfortunately there is no Byte.numberOfLeadingZeros method.
+    Preconditions.checkArgument(
+        Integer.numberOfLeadingZeros(array[0] & 0xFF) >= (len << 3) - size,
+        "Some bit positions are too high.");
+    BitSet bs;
+    ArrayUtils.reverse(array);
+    try {
+      bs = BitSet.valueOf(array);
+    } finally {
+      ArrayUtils.reverse(array);
+    }
+    bitset.clear();
+    bitset.or(bs);
   }
 
   @Override

@@ -16,14 +16,14 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import com.google.common.base.Preconditions;
 
 /**
  * {@link BitVector} range with a power of 2 length, where the inclusive start has

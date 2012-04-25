@@ -16,12 +16,12 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.PrimitiveArrays;
+import java.util.Arrays;
+import java.util.List;
 
 import junit.framework.TestCase;
 
-import java.util.Arrays;
-import java.util.List;
+import com.google.common.primitives.Ints;
 
 /**
  * @author Daniel Aioanei
@@ -59,7 +59,7 @@ public class HilbertIndexMasksTest extends TestCase {
   }
   
   private static BitVector extractMask(List<Integer> bitsPerDimension, int i, int d) {
-    int[] m = PrimitiveArrays.toIntArray(bitsPerDimension);
+    int[] m = Ints.toArray(bitsPerDimension);
     int n = m.length;
     BitVector mu = BitVectorFactories.OPTIMAL.apply(m.length);
     for (int j = 0; j < n; ++j) {

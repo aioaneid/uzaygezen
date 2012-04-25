@@ -16,17 +16,16 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
-
+import java.util.Arrays;
+import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import junit.framework.TestCase;
 
 import org.easymock.EasyMock;
 
-import java.util.Arrays;
-import java.util.Random;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
 
 /**
  * @author Daniel Aioanei

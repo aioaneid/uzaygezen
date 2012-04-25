@@ -16,12 +16,12 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
 import java.util.List;
+
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Filter combiner that works with filters consisting in a list of ranges, and

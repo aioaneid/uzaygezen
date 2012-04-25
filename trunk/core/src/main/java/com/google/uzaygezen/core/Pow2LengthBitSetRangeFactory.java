@@ -16,20 +16,20 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.PrimitiveArrays;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Ints;
 
 /**
  * Transforms a {@link MapNode} tree into a {@link java.util.Map} which contains
@@ -53,7 +53,7 @@ public class Pow2LengthBitSetRangeFactory<V>
    * size of the list must be {@code mMax}.
    */
   private Pow2LengthBitSetRangeFactory(List<Integer> cardinality) {
-    this.elementLengths = PrimitiveArrays.toIntArray(cardinality);
+    this.elementLengths = Ints.toArray(cardinality);
     elementLengthSums = new int[elementLengths.length];
     for (int i = 0; i < elementLengths.length; ++i) {
       elementLengthSums[i] = (i == 0 ? 0 : elementLengthSums[i - 1]) + elementLengths[i];

@@ -20,9 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Nullable;
-import com.google.common.collect.ForwardingList;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -34,6 +31,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+
+import com.google.common.collect.ForwardingList;
 
 /**
  * Linked list implementation of {@code NodeList} and {@code Queue}. All
@@ -154,7 +153,7 @@ final class LinkedNodeList<E> extends AbstractSequentialList<E>
     return node;
   }
 
-  public Node<E> nodeWith(@Nullable Object o) {
+  public Node<E> nodeWith(Object o) {
     for (Node<E> node = head; node != null; node = node.next()) {
       if (node.get().equals(o)) {
         return node;
@@ -163,7 +162,7 @@ final class LinkedNodeList<E> extends AbstractSequentialList<E>
     return null;
   }
 
-  public Node<E> lastNodeWith(@Nullable Object o) {
+  public Node<E> lastNodeWith(Object o) {
     for (Node<E> node = tail; node != null; node = node.previous()) {
       if (node.get().equals(o)) {
         return node;

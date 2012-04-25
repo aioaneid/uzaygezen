@@ -16,12 +16,12 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.BitSet;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Preconditions;
 
 /**
  * BitVector implementation for vectors of length 64 or less.
@@ -322,7 +322,7 @@ public final class LongBitVector implements BitVector, Cloneable {
   }
   
   public void copyFrom(long value) {
-    Preconditions.checkArgument(64 - Long.numberOfLeadingZeros(data) <= size, "value doesn't fit");
+    Preconditions.checkArgument(64 - Long.numberOfLeadingZeros(value) <= size, "value doesn't fit");
     data = value;
   }
 
@@ -520,6 +520,19 @@ public final class LongBitVector implements BitVector, Cloneable {
   public long[] toLongArray() {
     return size == 0 ? ArrayUtils.EMPTY_LONG_ARRAY : new long[] {data};
   }
+  
+  @Override
+  public byte[] toBigEndianByteArray() {
+    int n = MathUtils.bitCountToByteCount(size);
+    byte[] a = new byte[n];
+    long x = data;
+    for (int i = 0; i < n; ) {
+      a[n - ++i] = (byte) (x & 0xFF);
+      x >>>= 8;
+    }
+    assert x == 0;
+    return a;
+  }
 
   @Override
   public void copyFrom(long[] array) {
@@ -531,6 +544,21 @@ public final class LongBitVector implements BitVector, Cloneable {
     }
   }
 
+  @Override
+  public void copyFromBigEndian(byte[] array) {
+    int n = MathUtils.bitCountToByteCount(size);
+    Preconditions.checkArgument(array.length == n, "Array length must be %s.", n);
+    long x = 0;
+    for (int i = 0; i < n - 1; ) {
+      x |= (array[i++] & 0xFF);
+      x <<= 8;
+    }
+    if (n != 0) {
+      x |= (array[n - 1] & 0xFF);
+    }
+    copyFrom(x);
+  }
+ 
   @Override
   public boolean areAllLowestBitsClear(int bitCount) {
     Preconditions.checkArgument(0 <= bitCount & bitCount <= size, "bitCount is out of range");

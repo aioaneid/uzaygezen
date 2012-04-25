@@ -16,11 +16,11 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.PrimitiveArrays;
-
 import java.util.Arrays;
 import java.util.Collections;
+
+import com.google.common.base.Preconditions;
+import com.google.common.primitives.Ints;
 
 /**
  * Adapts the user friendly {@link SpaceVisitor} to serve as a {@link
@@ -46,7 +46,7 @@ public class ZoomingSpaceVisitorAdapter implements ZoomingNavigator {
   public ZoomingSpaceVisitorAdapter(IndexCalculator curve, SpaceVisitor visitor) {
     this.curve = curve;
     this.visitor = visitor;
-    m = PrimitiveArrays.toIntArray(curve.getSpec().getBitsPerDimension());
+    m = Ints.toArray(curve.getSpec().getBitsPerDimension());
   }
   
   @Override
