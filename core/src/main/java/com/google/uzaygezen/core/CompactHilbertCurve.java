@@ -16,11 +16,11 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.PrimitiveArrays;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
+import com.google.common.base.Preconditions;
+import com.google.common.primitives.Ints;
 
 /**
  * Compact Hilbert curve implementation that uses the minimum number of bits
@@ -68,7 +68,7 @@ public class CompactHilbertCurve implements SpaceFillingCurve {
   public CompactHilbertCurve(MultiDimensionalSpec spec) {
     this.spec = Preconditions.checkNotNull(spec, "spec");
     masks = new HilbertIndexMasks(spec);
-    m = PrimitiveArrays.toIntArray(spec.getBitsPerDimension());
+    m = Ints.toArray(spec.getBitsPerDimension());
     n = m.length;
     e = BitVectorFactories.OPTIMAL.apply(n);
     mu = BitVectorFactories.OPTIMAL.apply(n);
@@ -83,7 +83,7 @@ public class CompactHilbertCurve implements SpaceFillingCurve {
    * @param m bits per dimension
    */
   public CompactHilbertCurve(int[] m) {
-    this(new MultiDimensionalSpec(PrimitiveArrays.asList(m)));
+    this(new MultiDimensionalSpec(Ints.asList(m)));
   }
   
   @Override

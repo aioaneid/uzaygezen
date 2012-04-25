@@ -16,16 +16,16 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.easymock.EasyMock;
 
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * TODO: Add some more unit tests!

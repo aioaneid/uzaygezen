@@ -16,10 +16,10 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.PrimitiveArrays;
-
 import java.util.Collections;
 import java.util.List;
+
+import com.google.common.primitives.Ints;
 
 /**
  * Precomputes the masks associated to the iterations in a Hilbert index.
@@ -56,7 +56,7 @@ public class HilbertIndexMasks {
   }
   
   public List<Integer> cardinalities() {
-    return Collections.unmodifiableList(PrimitiveArrays.asList(cardinalities));
+    return Collections.unmodifiableList(Ints.asList(cardinalities));
   }
   
   /**

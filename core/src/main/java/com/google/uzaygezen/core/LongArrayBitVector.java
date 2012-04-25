@@ -20,6 +20,8 @@ import com.google.common.base.Preconditions;
 
 import java.util.*;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 /**
  * An implementation of {@code BitVector} based on an array of longs.
  * It also has methods for easy concatenation and for easy slicing.
@@ -153,6 +155,7 @@ public class LongArrayBitVector implements BitVector {
   @Override
   public void copyFromSection(BitVector src, int fromIndex) {
     checkRange(0, size - src.size(), fromIndex);
+    clear();
     copyFromSection(toPotentiallySharedLongArray(src), fromIndex);
     assert checkSanity();
   }
@@ -557,6 +560,7 @@ public class LongArrayBitVector implements BitVector {
   @Override
   public void copyFrom(long d) {
     Preconditions.checkArgument(WORD - Long.numberOfLeadingZeros(d) <= size);
+    clear();
     if (size > 0) {
       data[0] = d;
     }
@@ -568,22 +572,54 @@ public class LongArrayBitVector implements BitVector {
   }
 
   @Override
+  public byte[] toBigEndianByteArray() {
+    int n = MathUtils.bitCountToByteCount(size);
+    byte[] a = new byte[n];
+    long x = 0;
+    int wordIndex = -1;
+    for (int i = 0; i < n; ) {
+      if ((i & 7) == 0) {
+        assert x == 0;
+        x = data[++wordIndex];
+      }
+      a[n - ++i] = (byte) (x & 0xFF);
+      x >>>= 8;
+    }
+    assert x == 0;
+    assert wordIndex == data.length - 1;
+    return a;
+  }
+
+  @Override
   public void copyFrom(long[] array) {
     Preconditions.checkArgument(data.length == array.length);
     System.arraycopy(array, 0, data, 0, data.length);
     assert checkSanity();
   }
 
+  @Override
+  public void copyFromBigEndian(byte[] array) {
+    ArrayUtils.reverse(array);
+    try {
+      copyFrom(array);
+    } finally {
+      ArrayUtils.reverse(array);
+    }
+    assert checkSanity();
+  }
+  
   public void copyFrom(byte[] array) {
     Preconditions.checkArgument((size + BYTE - 1) / BYTE == array.length);
-    for (int i = 0; i < array.length; ++i)
+    clear();
+    for (int i = 0; i < array.length; ++i) {
       data[i / BYTES_IN_WORD] |= ((long) array[i] & 0xff) << (i % BYTES_IN_WORD * BYTE);
+    }
     assert checkSanity();
   }
 
   @Override
   public int hashCode() {
-    // Immitate BitSet's hashCode.
+    // Imitate BitSet's hashCode.
     long h = 1234;
     for (int i = data.length; --i >= 0;) {
       h ^= data[i] * (i + 1);

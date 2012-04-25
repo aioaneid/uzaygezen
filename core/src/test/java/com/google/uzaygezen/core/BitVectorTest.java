@@ -16,11 +16,22 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Function;
+import static org.junit.Assert.assertArrayEquals;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import junit.framework.TestCase;
 
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Longs;
 
 /**
  * @author Mehmet Akin
@@ -188,6 +199,40 @@ public class BitVectorTest extends TestCase {
     bv.copyFrom(bs);
     for (int i = 0; i < bigSize; ++i) {
       assertEquals(i % 3 == 0, bv.get(i));
+    }
+  }
+
+  public void testCopyFromBigEndian64Bits() {
+    checkCopyFromBigEndian64Bits(BitVectorFactories.OPTIMAL);
+    checkCopyFromBigEndian64Bits(BitVectorFactories.SLOW);
+    checkCopyFromBigEndian64Bits(BitVectorFactories.LONG_ARRAY);
+  }
+
+  private void checkCopyFromBigEndian64Bits(
+      Function<Integer, BitVector> factory) {
+    int bits = 10;
+    for (int shift = 0; shift < 64 - bits; ++shift) {
+      int size = bits + shift;
+      BitVector bv = factory.apply(size);
+      for (long i = 1 << bits; --i >= 0;) {
+        for (long k : new long[] {
+          i << shift, i << shift | ((1L << shift) - 1)}) {
+          byte[] bigEndian = Longs.toByteArray(k);
+          int n = (size + 7) >>> 3;
+          for (int j = 0; j < bigEndian.length - n; ++j) {
+            assert bigEndian[j] == 0;
+          }
+          byte[] bytes = Arrays.copyOfRange(
+            bigEndian, bigEndian.length - n, bigEndian.length);
+          bv.copyFromBigEndian(bytes);
+          assertEquals(Long.bitCount(k), bv.cardinality());
+          if (k != bv.toExactLong()) {
+            bv.copyFromBigEndian(bytes);
+            bv.toExactLong();
+          }
+          assertEquals(bv.getClass().toString(), k, bv.toExactLong());
+        }
+      }
     }
   }
 
@@ -988,9 +1033,56 @@ public class BitVectorTest extends TestCase {
     checkToLongArrayForTwoWords(BitVectorFactories.LONG_ARRAY);
   }
   
+  public void testToBigEndianByteArrayForSingleWord() {
+    checkToBigEndianByteArrayForSingleWord(BitVectorFactories.SLOW);
+    checkToBigEndianByteArrayForSingleWord(BitVectorFactories.OPTIMAL);
+    checkToBigEndianByteArrayForSingleWord(BitVectorFactories.LONG_ARRAY);
+  }
+
+  public void testToBigEndianByteArrayForTwoWords() {
+    checkToBigEndianByteArrayForTwoWords(BitVectorFactories.SLOW);
+    checkToBigEndianByteArrayForTwoWords(BitVectorFactories.OPTIMAL);
+    checkToBigEndianByteArrayForTwoWords(BitVectorFactories.LONG_ARRAY);
+  }
+
+  public void testToBigEndianByteArrayAndCopyFromBigEndianAreInverse() {
+    checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.SLOW);
+    checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.OPTIMAL);
+    checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.LONG_ARRAY);
+  }
+
+  private void checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(
+      BitVectorFactories factory) {
+    Random random = new Random(TestUtils.SEED);
+    for (int sizeUpperLimit = 0; sizeUpperLimit < 128; ++sizeUpperLimit) {
+      byte[] array = new byte[sizeUpperLimit];
+      random.nextBytes(array);
+      BitSet bs = BitSet.valueOf(array);
+      ArrayUtils.reverse(array);
+      int logicalSize = bs.length();
+      int n = MathUtils.bitCountToByteCount(logicalSize);
+      for (int i = 0; i < array.length - n; ++i) {
+        assert array[i] == 0;
+      }
+      byte[] bigEndian = Arrays.copyOfRange(
+        array, array.length - n, array.length);
+      for (int size = logicalSize; size <= n << 3; ++size) {
+        BitVector bv = factory.apply(size);
+        bv.copyFromBigEndian(bigEndian);
+        byte[] actual = bv.toBigEndianByteArray();
+        assertArrayEquals(bigEndian, actual);
+      }
+    }
+  }
+
   private void checkToLongArrayForTwoWords(Function<Integer, BitVector> factory) {
     checkEvenBitsToLongArray(factory);
     checkOddBitsToLongArray(factory);
+  }
+
+  private void checkToBigEndianByteArrayForTwoWords(Function<Integer, BitVector> factory) {
+    checkEvenBitsToBigEndianByteArray(factory);
+    checkOddBitsToBigEndianByteArray(factory);
   }
 
   private void checkEvenBitsToLongArray(Function<Integer, BitVector> factory) {
@@ -1002,6 +1094,16 @@ public class BitVectorTest extends TestCase {
     MoreAsserts.assertEquals(new long[] {0x5555555555555555L, 0x5555555555555555L}, longArray);
   }
 
+  private void checkEvenBitsToBigEndianByteArray(Function<Integer, BitVector> factory) {
+    BitVector v = factory.apply(128);
+    for (int i = 0; i < 64; ++i) {
+      v.set(2 * i);
+    }
+    byte[] actual = v.toBigEndianByteArray();
+    byte[] expected = Bytes.toArray(Collections.nCopies(16, (byte) 0x55));
+    assertArrayEquals(expected, actual);
+  }
+
   private void checkOddBitsToLongArray(Function<Integer, BitVector> factory) {
     BitVector v = factory.apply(128);
     for (int i = 0; i < 64; ++i) {
@@ -1009,6 +1111,16 @@ public class BitVectorTest extends TestCase {
     }
     long[] longArray = v.toLongArray();
     MoreAsserts.assertEquals(new long[] {0xAAAAAAAAAAAAAAAAL, 0xAAAAAAAAAAAAAAAAL}, longArray);
+  }
+  
+  private void checkOddBitsToBigEndianByteArray(Function<Integer, BitVector> factory) {
+    BitVector v = factory.apply(128);
+    for (int i = 0; i < 64; ++i) {
+      v.set(2 * i + 1);
+    }
+    byte[] actual = v.toBigEndianByteArray();
+    byte[] expected = Bytes.toArray(Collections.nCopies(16, (byte) 0xAA));
+    assertArrayEquals(expected, actual);
   }
 
   private void checkToLongArrayForSingleWord(Function<Integer, BitVector> factory) {
@@ -1027,6 +1139,22 @@ public class BitVectorTest extends TestCase {
     }
   }
 
+  private void checkToBigEndianByteArrayForSingleWord(Function<Integer, BitVector> factory) {
+    for (int size = 0; size < 10; ++size) {
+      BitVector v = factory.apply(size);
+      for (long i = 1 << size; --i >= 0; ) {
+        checkToBigEndianByteArrayForSingleWord(v, i);
+      }
+    }
+    BitVector v2 = factory.apply(64);
+    for (long i = Long.MIN_VALUE; --i >= Long.MAX_VALUE - 1024; ) {
+      checkToBigEndianByteArrayForSingleWord(v2, i);
+    }
+    for (long i = Long.MIN_VALUE; ++i <= Long.MIN_VALUE + 1024; ) {
+      checkToBigEndianByteArrayForSingleWord(v2, i);
+    }
+  }
+  
   private void checkToLongArrayForSingleWord(BitVector v, long i) {
     v.copyFrom(i);
     long[] array = v.toLongArray();
@@ -1039,6 +1167,23 @@ public class BitVectorTest extends TestCase {
     }
   }
 
+  private void checkToBigEndianByteArrayForSingleWord(BitVector v, long i) {
+    v.copyFrom(i);
+    byte[] array = v.toBigEndianByteArray();
+    if (v.size() == 0) {
+      assert i == 0;
+      assertEquals(0, array.length);
+    } else {
+      int n = (v.size() + 7) >>> 3;
+      assertEquals(n, array.length);
+      byte[] expected = Longs.toByteArray(i);
+      for (int j = 0; j < expected.length - n; ++j) {
+        assert expected[j] == 0;
+      }
+      assertArrayEquals(Arrays.copyOfRange(expected, expected.length - n, expected.length), array);
+    }
+  }
+ 
   public void testCopyFromLongArray() {
     checkCopyFromLongArray(BitVectorFactories.SLOW);
     checkCopyFromLongArray(BitVectorFactories.OPTIMAL);

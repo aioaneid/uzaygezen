@@ -16,13 +16,13 @@
 
 package com.google.uzaygezen.core;
 
+import java.util.List;
+
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
-import java.util.List;
 
 /**
  * Represents a computed query which can be applied, perhaps after further

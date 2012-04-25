@@ -16,13 +16,13 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.Multisets;
-
-import junit.framework.Assert;
-
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import junit.framework.Assert;
+
+import com.google.common.collect.ImmutableMultiset;
 
 /**
  * Contains additional assertion methods not found in JUnit.
@@ -94,7 +94,7 @@ final class MoreAsserts {
   public static void assertContentsAnyOrder(
       String message, Iterable<?> actual, Object... expected) {
     Assert.assertEquals(message,
-        Multisets.newHashMultiset(expected), Multisets.newHashMultiset(actual));
+        ImmutableMultiset.copyOf(expected), ImmutableMultiset.copyOf(actual));
   }
 
   /**

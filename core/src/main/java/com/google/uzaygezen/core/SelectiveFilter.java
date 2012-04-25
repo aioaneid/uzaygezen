@@ -16,10 +16,10 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
+import com.google.common.base.Preconditions;
 
 /**
  * Encapsulates a filter and a flag indicating if the filter could result in

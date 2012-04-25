@@ -19,8 +19,8 @@ package com.google.uzaygezen.core;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * The result of the user assessment of the spatial relationship between one

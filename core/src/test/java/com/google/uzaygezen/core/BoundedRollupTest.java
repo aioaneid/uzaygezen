@@ -16,18 +16,6 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.PrimitiveArrays;
-import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
-import com.google.uzaygezen.core.TestUtils.IntArrayComparator;
-
-import junit.framework.TestCase;
-
-import org.apache.commons.lang.ArrayUtils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,6 +24,18 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import junit.framework.TestCase;
+
+import org.apache.commons.lang3.ArrayUtils;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
+import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
+import com.google.uzaygezen.core.TestUtils.IntArrayComparator;
 
 /**
  * @author Daniel Aioanei
@@ -222,7 +222,7 @@ public class BoundedRollupTest extends TestCase {
   private MapNode<Integer, CountingDoubleArray> createTree(
       final List<int[]> list, BoundedRollup<Integer, CountingDoubleArray> rollup) {
     for (int[] array : list) {
-      rollup.feedRow(PrimitiveArrays.asList(array).iterator(), newCountingArray());
+      rollup.feedRow(Ints.asList(array).iterator(), newCountingArray());
     }
     MapNode<Integer, CountingDoubleArray> root = rollup.finish();
     return root;

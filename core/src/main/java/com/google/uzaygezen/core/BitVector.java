@@ -236,9 +236,12 @@ public interface BitVector extends Comparable<BitVector> {
   void copyFrom(long data);
   
   /**
-   * See {@code BitSet#toLongArray} in Java 7. 
+   * See {@code BitSet#toLongArray} in Java 7. The main difference is that we
+   * do not stop at the highest set bit.
    */
   long[] toLongArray();
+  
+  byte[] toBigEndianByteArray();
   
   /**
    * Makes this bit vector have the same bit pattern as the little-endian
@@ -247,6 +250,8 @@ public interface BitVector extends Comparable<BitVector> {
    * @param array must have length {@code (size() + 63) / 64}
    */
   void copyFrom(long[] array);
+  
+  void copyFromBigEndian(byte[] array);
   
   /**
    * @return {@code size() + 31 * toBitSet().hashCode()}

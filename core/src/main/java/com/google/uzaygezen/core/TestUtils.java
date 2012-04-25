@@ -16,14 +16,13 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.Comparators;
-import com.google.common.collect.ImmutableList;
-
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Daniel Aioanei
@@ -154,11 +153,12 @@ public class TestUtils {
     public int compare(int[] a, int[] b) {
       int minLen = Math.min(a.length, b.length);
       for (int i = 0; i < minLen; ++i) {
-        if (a[i] != b[i]) {
-          return Comparators.compare(a[i], b[i]);
+        int cmp = Integer.compare(a[i], b[i]);
+        if (cmp != 0) {
+          return cmp;
         }
       }
-      return Comparators.compare(a.length, b.length);
+      return Integer.compare(a.length, b.length);
     }
   }
   
