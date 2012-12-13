@@ -14,32 +14,33 @@
  * limitations under the License.
  */
 
-package com.google.uzaygezen.core;
+package com.google.uzaygezen.core.ranges;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
-
-import junit.framework.TestCase;
-
-import java.util.List;
+import com.google.uzaygezen.core.MoreAsserts;
+import com.google.uzaygezen.core.TestUtils;
 
 /**
  * @author Daniel Aioanei
  */
-public class LongRangeTest extends TestCase {
+public class LongRangeTest {
 
-  public void testOverlapForKnownValues() {
-    assertEquals(1, TestUtils.ZERO_ONE.overlap(TestUtils.ZERO_ONE));
-    assertEquals(1, TestUtils.ZERO_ONE.overlap(TestUtils.ZERO_TEN));
-    assertEquals(1, TestUtils.ZERO_TEN.overlap(TestUtils.ZERO_ONE));
-    assertEquals(0, TestUtils.ZERO_ONE.overlap(TestUtils.ONE_TEN));
-    assertEquals(0, TestUtils.ONE_TEN.overlap(TestUtils.ZERO_ONE));
-    assertEquals(9, TestUtils.ZERO_TEN.overlap(TestUtils.ONE_TEN));
-    assertEquals(9, TestUtils.ONE_TEN.overlap(TestUtils.ZERO_TEN));
+  @Test
+  public void overlapForKnownValues() {
+    Assert.assertEquals(1, TestUtils.ZERO_ONE.overlap(TestUtils.ZERO_ONE));
+    Assert.assertEquals(1, TestUtils.ZERO_ONE.overlap(TestUtils.ZERO_TEN));
+    Assert.assertEquals(1, TestUtils.ZERO_TEN.overlap(TestUtils.ZERO_ONE));
+    Assert.assertEquals(0, TestUtils.ZERO_ONE.overlap(TestUtils.ONE_TEN));
+    Assert.assertEquals(0, TestUtils.ONE_TEN.overlap(TestUtils.ZERO_ONE));
+    Assert.assertEquals(9, TestUtils.ZERO_TEN.overlap(TestUtils.ONE_TEN));
+    Assert.assertEquals(9, TestUtils.ONE_TEN.overlap(TestUtils.ZERO_TEN));
   }
   
-  public void testOverlapForOneDimension() {
+  @Test
+  public void overlapForOneDimension() {
     int n = 10;
     for (int i = 0; i < n; ++i) {
       for (int j = i + 1; j < n; ++j) {
@@ -50,36 +51,22 @@ public class LongRangeTest extends TestCase {
             long actual0 = x.overlap(y);
             long actual1 = LongRange.overlap(ImmutableList.of(x), ImmutableList.of(y));
             long expected = overlap(i, j, k, l);
-            assertEquals(expected, actual0);
-            assertEquals(expected, actual1);
+            Assert.assertEquals(expected, actual0);
+            Assert.assertEquals(expected, actual1);
           }
         }
       }
     }
   }
   
-  public void testMultiDimensionalOverlap() {
+  @Test
+  public void multiDimensionalOverlap() {
     LongRange x0 = LongRange.of(100, 105);
     LongRange x1 = LongRange.of(103, 200);
     LongRange y0 = LongRange.of(1, 10);
     LongRange y1 = LongRange.of(0, 5);
     long actual = LongRange.overlap(ImmutableList.of(x0, y0), ImmutableList.of(x1, y1));
-    assertEquals(8, actual);
-  }
-  
-  public void testOverlapSum() {
-    LongRange x0 = LongRange.of(100, 105);
-    LongRange x1 = LongRange.of(103, 200);
-    LongRange y0 = LongRange.of(1, 10);
-    LongRange y1 = LongRange.of(0, 5);
-    List<List<LongRange>> list = Lists.newArrayList();
-    List<LongRange> x0y0 = ImmutableList.of(x0, y0);
-    list.add(x0y0);
-    list.add(x0y0);
-    List<LongRange> x1y1 = ImmutableList.of(x1, y1);
-    list.add(x1y1);
-    long actual = LongRange.overlapSum(x0y0, list);
-    assertEquals(8 + ((x0.getEnd() - x0.getStart()) * (y0.getEnd() - y0.getStart()) << 1), actual);
+    Assert.assertEquals(8, actual);
   }
   
   /**
@@ -101,27 +88,31 @@ public class LongRangeTest extends TestCase {
     return overlap;
   }
 
-  public void testEqualsAndHashCode() {
+  @Test
+  public void equalsAndHashCode() {
     MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, TestUtils.ONE_TEN, true);
     MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, LongRange.of(1, 10), true);
     MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, TestUtils.ZERO_TEN, false);
   }
 
-  public void testGetters() {
-    assertEquals(1, TestUtils.ONE_TEN.getStart());
-    assertEquals(10, TestUtils.ONE_TEN.getEnd());
+  @Test
+  public void getters() {
+    Assert.assertEquals(Long.valueOf(1), TestUtils.ONE_TEN.getStart());
+    Assert.assertEquals(Long.valueOf(10), TestUtils.ONE_TEN.getEnd());
   }
 
-  public void testToString() {
-    assertTrue(TestUtils.ONE_TEN.toString().contains("1"));
-    assertTrue(TestUtils.ONE_TEN.toString().contains("10"));
+  @Test
+  public void toStringImplementation() {
+    Assert.assertTrue(TestUtils.ONE_TEN.toString().contains("1"));
+    Assert.assertTrue(TestUtils.ONE_TEN.toString().contains("10"));
   }
 
-  public void testContains() {
-    assertFalse(TestUtils.ONE_TEN.contains(0));
-    assertTrue(TestUtils.ONE_TEN.contains(1));
-    assertTrue(TestUtils.ONE_TEN.contains(5));
-    assertFalse(TestUtils.ONE_TEN.contains(10));
-    assertFalse(TestUtils.ONE_TEN.contains(11));
+  @Test
+  public void contains() {
+    Assert.assertFalse(TestUtils.ONE_TEN.contains(0));
+    Assert.assertTrue(TestUtils.ONE_TEN.contains(1));
+    Assert.assertTrue(TestUtils.ONE_TEN.contains(5));
+    Assert.assertFalse(TestUtils.ONE_TEN.contains(10));
+    Assert.assertFalse(TestUtils.ONE_TEN.contains(11));
   }
 }

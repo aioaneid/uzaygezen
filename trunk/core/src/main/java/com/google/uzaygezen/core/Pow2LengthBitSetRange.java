@@ -16,8 +16,6 @@
 
 package com.google.uzaygezen.core;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -73,48 +71,12 @@ public class Pow2LengthBitSetRange {
     return level;
   }
   
-  public long length() {
-    Preconditions.checkState(level < 64, "This method should only be called for level < 64.");
-    return 1L << level;
-  }
-
-  public LongRange toLongRange() {
-    long inclusiveStart = start.toExactLong();
-    long delta = 1L << level;
-    long exclusiveEnd = inclusiveStart + delta;
-    // Use the unsafe constructor since the values are known to be fine.
-    return new LongRange(inclusiveStart, exclusiveEnd);
-  }
-  
-  /**
-   * Computes the content of an orthotope. Semantically equivalent, but
-   * hopefully faster, than {@code BigIntRange.overlap(
-   * toBigIntOrthotope(orthotope), toBigIntOrthotope(orthotope))}.
-   * <p>
-   * By convention the content of an orthotope with zero dimensions is {@code
-   * 1}.
-   * </p>
-   * 
-   * @param pow2LengthOrthotope the orthotope whose content will be computed
-   * @return the content of {@code orthotope}
-   */
-  public static long content(List<Pow2LengthBitSetRange> pow2LengthOrthotope) {
+  public static int levelSum(List<Pow2LengthBitSetRange> pow2LengthOrthotope) {
     int levelSum = 0;
     for (Pow2LengthBitSetRange range : pow2LengthOrthotope) {
       levelSum += range.level;
     }
-    Preconditions.checkArgument(levelSum < 64, "content is too large");
-    return 1L << levelSum;
-  }
-  
-  public static List<LongRange> toLongOrthotope(
-      List<Pow2LengthBitSetRange> pow2LengthOrthotope) {
-    int len = pow2LengthOrthotope.size();
-    LongRange[] array = new LongRange[len];
-    for (int i = 0; i < len; ++i) {
-      array[i] = pow2LengthOrthotope.get(i).toLongRange();
-    }
-    return Collections.unmodifiableList(Arrays.asList(array));
+    return levelSum;
   }
   
   @Override

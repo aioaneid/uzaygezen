@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.uzaygezen.core;
+package com.google.uzaygezen.core.ranges;
 
 import java.util.List;
 
@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.uzaygezen.core.LongContent;
 
 /**
  * Non-empty interval with non-negative {@code long} inclusive start and
@@ -32,7 +33,7 @@ import com.google.common.base.Preconditions;
  *
  * @author Daniel Aioanei
  */
-public class LongRange {
+public class LongRange implements Range<Long, LongContent> {
   
   private final long start;
   private final long end;
@@ -49,15 +50,19 @@ public class LongRange {
   /**
    * @return the inclusive start of the interval
    */
-  public long getStart() {
+  public Long getStart() {
     return start;
   }
 
   /**
    * @return the exclusive end of the interval
    */
-  public long getEnd() {
+  public Long getEnd() {
     return end;
+  }
+  
+  public LongContent length() {
+    return new LongContent(end - start);
   }
   
   public static LongRange of(long start, long end) {
@@ -71,7 +76,7 @@ public class LongRange {
    * 
    * @return the size of the overlapping area
    */
-  public long overlap(LongRange other) {
+  long overlap(LongRange other) {
     if (start >= other.end || end <= other.start) {
       return 0;
     } else {
@@ -94,7 +99,7 @@ public class LongRange {
    * 
    * @return the overlapping content size
    */
-  public static long overlap(List<LongRange> x, List<LongRange> y) {
+  static long overlap(List<LongRange> x, List<LongRange> y) {
     int n = x.size();
     Preconditions.checkArgument(y.size() == n, "x and y must have the same size.");
     long overlap = 1;
@@ -105,22 +110,6 @@ public class LongRange {
       overlap *= xRange.overlap(yRange);
     }
     return overlap;
-  }
-  
-  /**
-   * Convenience method which sums the overlap between one orthotope and a set
-   * of target orthotopes. This is a plain summation, and the result is actually
-   * higher than the intersection with the union of the target orthotope when
-   * they are not disjoint.
-   * 
-   * @return the sum of the overlap of {@code x} with each element in {@code y}.
-   */
-  public static long overlapSum(List<LongRange> x, List<? extends List<LongRange>> y) {
-    long sum = 0;
-    for (List<LongRange> yElement : y) {
-      sum += overlap(x, yElement);
-    }
-    return sum;
   }
   
   @Override

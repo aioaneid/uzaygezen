@@ -16,18 +16,18 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
+import java.util.List;
 
 import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.junit.Test;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Daniel Aioanei
  */
-public class ZoomingSpaceVisitorAdapterTest extends TestCase {
+public class ZoomingSpaceVisitorAdapterTest {
 
   /**
    * Tests that the {@link ZoomingNavigator} calls are translated correctly into
@@ -35,7 +35,8 @@ public class ZoomingSpaceVisitorAdapterTest extends TestCase {
    * multidimensional space with {@code 1}, {@code 0} and {@code 3} bits for
    * each dimension, respectively.
    */
-  public void testVisit() {
+  @Test
+  public void visit() {
     // m0 must be less than or equal to m2 for this test to work.
     final int m0 = 1, m2 = 3;
     final MultiDimensionalSpec spec =
@@ -75,7 +76,7 @@ public class ZoomingSpaceVisitorAdapterTest extends TestCase {
                   new Pow2LengthBitSetRange(indexEndBs, lowOrderBitCount)), EasyMock.eq(ranges)))
                   .andReturn(b % 2 == 0);
               EasyMock.replay(mock);
-              assertEquals(b % 2 == 0, adaptor.visit(level, indexEndBs, q));
+              Assert.assertEquals(b % 2 == 0, adaptor.visit(level, indexEndBs, q));
               EasyMock.verify(mock);
               EasyMock.reset(mock);
             }

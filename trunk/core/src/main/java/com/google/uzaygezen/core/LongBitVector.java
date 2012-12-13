@@ -72,8 +72,7 @@ public final class LongBitVector implements BitVector, Cloneable {
   }
   
   private void checkBounds(int fromIndex, int toIndex) {
-    if (fromIndex < 0 | toIndex > size | fromIndex > toIndex
-        | (fromIndex == toIndex & fromIndex != 0 & fromIndex == size)) {
+    if (fromIndex < 0 | toIndex > size | fromIndex > toIndex) {
       throw new IndexOutOfBoundsException(
           "Range [" + fromIndex + ", " + toIndex + ") is invalid for this bit vector");
     }

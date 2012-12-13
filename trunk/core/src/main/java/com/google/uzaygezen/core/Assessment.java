@@ -16,11 +16,11 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * The result of the user assessment of the spatial relationship between one
@@ -56,14 +56,14 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * 
  * @param <T> filter type
  */
-public class Assessment<T> {
+public class Assessment<T, V> {
   
   private final SpatialRelation outcome;
   
   /**
    * Non-null iff {@link #outcome} is {@link SpatialRelation#DISJOINT}.
    */
-  private final long estimate;
+  private final V estimate;
   
   /**
    * Non-null iff {@link #outcome} is {@link SpatialRelation#COVERED}.
@@ -78,13 +78,7 @@ public class Assessment<T> {
    */
   private final boolean potentialOverSelectivity;
   
-  /**
-   * Overlaps is the most commonly expected type, and this instance is shared.
-   */
-  private static final Assessment<?> OVERLAPS_INSTANCE =
-      new Assessment<Object>(0, false, SpatialRelation.OVERLAPS, null);
-  
-  private Assessment(long estimate, boolean potentialOverSelectivity,
+  private Assessment(V estimate, boolean potentialOverSelectivity,
       SpatialRelation outcome, T filter) {
     this.estimate = estimate;
     this.potentialOverSelectivity = potentialOverSelectivity;
@@ -92,18 +86,18 @@ public class Assessment<T> {
     this.filter = filter;
   }
   
-  public static <T> Assessment<T> makeDisjoint(long gapEstimate) {
-    Preconditions.checkArgument(gapEstimate >= 0);
-    return new Assessment<T>(gapEstimate, false, SpatialRelation.DISJOINT, null);
+  public static <T, V> Assessment<T, V> makeDisjoint(V gapEstimate) {
+//    Preconditions.checkArgument(gapEstimate >= 0);
+    return new Assessment<T, V>(gapEstimate, false, SpatialRelation.DISJOINT, null);
   }
   
-  @SuppressWarnings("unchecked")
-  public static <T> Assessment<T> makeOverlaps() {
-    return (Assessment<T>) OVERLAPS_INSTANCE;
+  public static <T, V> Assessment<T, V> makeOverlaps(V zero) {
+    return new Assessment<>(zero, false, SpatialRelation.OVERLAPS, null);
   }
   
-  public static <T> Assessment<T> makeCovered(T coverFilter, boolean overSelectivityPossible) {
-    return new Assessment<T>(0, overSelectivityPossible, SpatialRelation.COVERED,
+  public static <T, V> Assessment<T, V> makeCovered(
+    T coverFilter, boolean overSelectivityPossible, V zero) {
+    return new Assessment<T, V>(zero, overSelectivityPossible, SpatialRelation.COVERED,
         Preconditions.checkNotNull(coverFilter, "filter"));
   }
   
@@ -111,7 +105,7 @@ public class Assessment<T> {
     return outcome;
   }
   
-  public long getEstimate() {
+  public V getEstimate() {
     return estimate;
   }
   
@@ -131,7 +125,7 @@ public class Assessment<T> {
     if (!(o instanceof Assessment)) {
       return false;
     }
-    Assessment<?> other = (Assessment<?>) o;
+    Assessment<?, ?> other = (Assessment<?, ?>) o;
     return outcome == other.outcome
         && potentialOverSelectivity == other.potentialOverSelectivity
         && Objects.equal(estimate, other.estimate) && Objects.equal(filter, other.filter);

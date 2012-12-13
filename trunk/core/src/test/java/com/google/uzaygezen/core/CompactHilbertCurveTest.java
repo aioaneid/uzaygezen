@@ -21,23 +21,24 @@ import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
 
 /**
  * @author Daniel Aioanei
  */
-public class CompactHilbertCurveTest extends TestCase {
+public class CompactHilbertCurveTest {
 
   private static final boolean CHECK_TEST_SANITY = true;
   private static final boolean DEFAULT_CHECK_INVERSE = true;
   
   private static final boolean kAnyBoolean = TestUtils.SEED % 2 == 0;
 
-  public void testCopyBitsToAndFromCancelEachOther() {
+  @Test
+  public void copyBitsToAndFromCancelEachOther() {
     for (int n = 0; n < 10; ++n) {
       BitVector[] p = new BitVector[n];
       for (int i = 0; i < n; ++i) {
@@ -49,7 +50,7 @@ public class CompactHilbertCurveTest extends TestCase {
           CompactHilbertCurve.copyOneBitToEachDimensionWhereSet(l, k, p);
           BitVector l2 = BitVectorFactories.OPTIMAL.apply(n);
           CompactHilbertCurve.copyOneBitFromEachDimension(k, p, l2);
-          assertEquals(l, l2);
+          Assert.assertEquals(l, l2);
           for (BitVector bs : p) {
             bs.clear();
           }
@@ -58,22 +59,24 @@ public class CompactHilbertCurveTest extends TestCase {
     }
   }
 
-  public void testClearOneBitInEachDimension() {
+  @Test
+  public void clearOneBitInEachDimension() {
     BitVector[] p = {BitVectorFactories.OPTIMAL.apply(3), BitVectorFactories.OPTIMAL.apply(1)};
     p[0].copyFrom(7);
     p[1].copyFrom(1);
     CompactHilbertCurve.clearOneBitInEachDimension(0, p);
-    assertEquals(6, p[0].toExactLong());
-    assertEquals(0, p[1].toExactLong());
+    Assert.assertEquals(6, p[0].toExactLong());
+    Assert.assertEquals(0, p[1].toExactLong());
     CompactHilbertCurve.clearOneBitInEachDimension(1, p);
-    assertEquals(4, p[0].toExactLong());
-    assertEquals(0, p[1].toExactLong());
+    Assert.assertEquals(4, p[0].toExactLong());
+    Assert.assertEquals(0, p[1].toExactLong());
     CompactHilbertCurve.clearOneBitInEachDimension(2, p);
-    assertEquals(0, p[0].toExactLong());
-    assertEquals(0, p[1].toExactLong());
+    Assert.assertEquals(0, p[0].toExactLong());
+    Assert.assertEquals(0, p[1].toExactLong());
   }
   
-  public void testCompactHilbertIndexOrderZeroOnHyperCubeIsZero() {
+  @Test
+  public void compactHilbertIndexOrderZeroOnHyperCubeIsZero() {
     for (int n = 0; n < 10; ++n) {
       int[] dims = new int[n];
       Arrays.fill(dims, 0);
@@ -81,59 +84,64 @@ public class CompactHilbertCurveTest extends TestCase {
       BitVector[] p = new BitVector[n];
       Arrays.fill(p, TestUtils.createBitVector(0, 0));
       BitVector chi = compactHilbertIndex(chc, p);
-      assertTrue(chi.isEmpty());
+      Assert.assertTrue(chi.isEmpty());
     }
   }
 
-  public void testCompactHilbertIndexOnOneDimensionIsIdentityFunction() {
+  @Test
+  public void compactHilbertIndexOnOneDimensionIsIdentityFunction() {
     for (int order = 0; order < 11; ++order) {
       for (int i = 0; i < 1 << order; ++i) {
         BitVector bitSetCounter = TestUtils.createBitVector(i, order);
         CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {order});
         BitVector chi = compactHilbertIndex(chc, new BitVector[] {bitSetCounter});
-        assertEquals(bitSetCounter, chi);
+        Assert.assertEquals(bitSetCounter, chi);
       }
     }
   }
 
-  public void testCompactHilbertIndexFirstOrderOnSquare() {
+  @Test
+  public void compactHilbertIndexFirstOrderOnSquare() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {1, 1});
     BitVector chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(0, 1), TestUtils.createBitVector(0, 1)});
-    assertEquals(TestUtils.createBitVector(0, 2), chi);
+    Assert.assertEquals(TestUtils.createBitVector(0, 2), chi);
     chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(0, 1), TestUtils.createBitVector(1, 1)});
-    assertEquals(TestUtils.createBitVector(1, 2), chi);
+    Assert.assertEquals(TestUtils.createBitVector(1, 2), chi);
     BitVector two = TestUtils.createBitVector(2, 2);
     chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(1, 1), TestUtils.createBitVector(1, 1)});
-    assertEquals(two, chi);
+    Assert.assertEquals(two, chi);
     chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(1, 1), TestUtils.createBitVector(0, 1)});
-    assertEquals(TestUtils.createBitVector(3, 2), chi);
+    Assert.assertEquals(TestUtils.createBitVector(3, 2), chi);
   }
 
-  public void testCompactHilbertIndexFirstOrderOnX1Y0() {
+  @Test
+  public void compactHilbertIndexFirstOrderOnX1Y0() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {1, 0});
     BitVector chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(0, 1), TestUtils.createBitVector(0, 0)});
-    assertEquals(TestUtils.createBitVector(0, 1), chi);
+    Assert.assertEquals(TestUtils.createBitVector(0, 1), chi);
     chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(1, 1), TestUtils.createBitVector(0, 0)});
-    assertEquals(TestUtils.createBitVector(1, 1), chi);
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), chi);
   }
 
-  public void testCompactHilbertIndexFirstOrderOnX0Y1() {
+  @Test
+  public void compactHilbertIndexFirstOrderOnX0Y1() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {0, 1});
     BitVector chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(0, 0), TestUtils.createBitVector(0, 1)});
-    assertEquals(TestUtils.createBitVector(0, 1), chi);
+    Assert.assertEquals(TestUtils.createBitVector(0, 1), chi);
     chi = compactHilbertIndex(chc, new BitVector[] {
         TestUtils.createBitVector(0, 0), TestUtils.createBitVector(1, 1)});
-    assertEquals(TestUtils.createBitVector(1, 1), chi);
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), chi);
   }
 
-  public void testConsecutiveFirstOrderHilbertIndexIsGrayCodeInverse() {
+  @Test
+  public void consecutiveFirstOrderHilbertIndexIsGrayCodeInverse() {
     for (int n = 0; n < 10; ++n) {
       int[] dims = new int[n];
       Arrays.fill(dims, 1);
@@ -148,7 +156,7 @@ public class CompactHilbertCurveTest extends TestCase {
         BitVector expected = bitSetCounter.clone();
         expected.grayCodeInverse();
         BitVector chi = compactHilbertIndex(chc, p);
-        assertEquals(expected, chi);
+        Assert.assertEquals(expected, chi);
       }
     }
   }
@@ -158,7 +166,8 @@ public class CompactHilbertCurveTest extends TestCase {
    * dimensionality differ by 1 in TestUtils.oneAsBitVector dimension and are
    * identical in the other dimensions.
    */
-  public void testConsecutiveHilbertIndexesDifferInOneDimensionByOne() {
+  @Test
+  public void consecutiveHilbertIndexesDifferInOneDimensionByOne() {
     /*
      * Execution time increases exponentially with the total number of bits
      * since we generate all possibilities.
@@ -184,11 +193,11 @@ public class CompactHilbertCurveTest extends TestCase {
           Integer old = hilbertIndexToPoint.put(chi, i);
           assert old == null;
         }
-        assertEquals(1 << (order * n), hilbertIndexToPoint.size());
+        Assert.assertEquals(1 << (order * n), hilbertIndexToPoint.size());
         Integer previous = null;
         for (Integer i : hilbertIndexToPoint.values()) {
           if (previous == null) {
-            assertEquals(0, i.intValue());
+            Assert.assertEquals(0, i.intValue());
           } else {
             int x = i.intValue();
             int y = previous.intValue();
@@ -200,13 +209,14 @@ public class CompactHilbertCurveTest extends TestCase {
           checkNeighboursDifferInExactlyOneDimension(order, 0, previous
               .intValue());
         } else {
-          assertEquals(0, previous.intValue());
+          Assert.assertEquals(0, previous.intValue());
         }
       }
     }
   }
 
-  public void testCompactHilbertIndexPreservesHilbertIndexOrdering() {
+  @Test
+  public void compactHilbertIndexPreservesHilbertIndexOrdering() {
     Random rnd = new Random(TestUtils.SEED);
     int n = 5;
     int[] m = new int[n];
@@ -237,7 +247,7 @@ public class CompactHilbertCurveTest extends TestCase {
       BitVector pHi = compactHilbertIndex(h, p);
       BitVector qHi = compactHilbertIndex(h, q);
       int expected = Integer.signum(pHi.compareTo(qHi));
-      assertEquals(expected, actual);
+      Assert.assertEquals(expected, actual);
     }
   }
 
@@ -246,13 +256,13 @@ public class CompactHilbertCurveTest extends TestCase {
     int l = Math.min(x, y);
     int diff = m - l;
     int diffBitCount = Integer.bitCount(m - l);
-    assertTrue(1 == diffBitCount || bitsPerDim == diffBitCount);
+    Assert.assertTrue(1 == diffBitCount || bitsPerDim == diffBitCount);
     if (diffBitCount == bitsPerDim) {
       // Must be a contiguous section bitsPerDim aligned.
       int tcb = Integer.numberOfTrailingZeros(diff);
-      assertEquals(0, tcb % bitsPerDim);
+      Assert.assertEquals(0, tcb % bitsPerDim);
       int hcb = Integer.numberOfLeadingZeros(diff);
-      assertEquals(32, tcb + hcb + bitsPerDim);
+      Assert.assertEquals(32, tcb + hcb + bitsPerDim);
     }
   }
   
@@ -265,7 +275,7 @@ public class CompactHilbertCurveTest extends TestCase {
     if (CHECK_TEST_SANITY) {
       final int n = chc.getSpec().getBitsPerDimension().size();
       for (int i = 0; i < n; ++i) {
-        assertEquals(chc.getSpec().getBitsPerDimension().get(i).intValue(), p[i].size());
+        Assert.assertEquals(chc.getSpec().getBitsPerDimension().get(i).intValue(), p[i].size());
       }
     }
     BitVector chi = BitVectorFactories.OPTIMAL.apply(chc.getSpec().sumBitsPerDimension());
@@ -276,12 +286,13 @@ public class CompactHilbertCurveTest extends TestCase {
         q[i] = BitVectorFactories.OPTIMAL.apply(chc.getSpec().getBitsPerDimension().get(i));
       }
       chc.indexInverse(chi, q);
-      assertEquals(Arrays.asList(p), Arrays.asList(q));
+      Assert.assertEquals(Arrays.asList(p), Arrays.asList(q));
     }
     return chi;
   }
 
-  public void testCompactHilbertIndexInverseOrderZeroOnHyperCubeIsZero() {
+  @Test
+  public void compactHilbertIndexInverseOrderZeroOnHyperCubeIsZero() {
     for (int n = 0; n < 10; ++n) {
       int[] dims = new int[n];
       Arrays.fill(dims, 0);
@@ -290,12 +301,13 @@ public class CompactHilbertCurveTest extends TestCase {
       Arrays.fill(p, TestUtils.createBitVector(0, 0));
       chc.indexInverse(TestUtils.createBitVector(0, 0), p);
       for (BitVector coordinate : p) {
-        assertTrue(coordinate.isEmpty());
+        Assert.assertTrue(coordinate.isEmpty());
       }
     }
   }
 
-  public void testCompactHilbertIndexInverseOnOneDimensionIsIdentityFunction() {
+  @Test
+  public void compactHilbertIndexInverseOnOneDimensionIsIdentityFunction() {
     for (int order = 0; order < 11; ++order) {
       for (int i = 0; i < 1 << order; ++i) {
         BitVector bitSetCounter = TestUtils.createBitVector(i, order);
@@ -303,59 +315,63 @@ public class CompactHilbertCurveTest extends TestCase {
         BitVector[] p = new BitVector[1];
         p[0] = BitVectorFactories.OPTIMAL.apply(order);
         chc.indexInverse(bitSetCounter, p);
-        assertEquals(bitSetCounter, p[0]);
+        Assert.assertEquals(bitSetCounter, p[0]);
       }
     }
   }
 
-  public void testCompactHilbertIndexInverseFirstOrderOnSquare() {
+  @Test
+  public void compactHilbertIndexInverseFirstOrderOnSquare() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {1, 1});
     BitVector[] p = new BitVector[2];
     p[0] = BitVectorFactories.OPTIMAL.apply(1);
     p[1] = BitVectorFactories.OPTIMAL.apply(1);
     chc.indexInverse(TestUtils.createBitVector(0, 2), p);
-    assertTrue(p[0].isEmpty());
-    assertTrue(p[1].isEmpty());
+    Assert.assertTrue(p[0].isEmpty());
+    Assert.assertTrue(p[1].isEmpty());
     chc.indexInverse(TestUtils.createBitVector(1, 2), p);
-    assertTrue(p[0].isEmpty());
-    assertEquals(TestUtils.createBitVector(1, 1), p[1]);
+    Assert.assertTrue(p[0].isEmpty());
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), p[1]);
     BitVector two = TestUtils.createBitVector(2, 2);
     chc.indexInverse(two, p);
-    assertEquals(TestUtils.createBitVector(1, 1), p[0]);
-    assertEquals(TestUtils.createBitVector(1, 1), p[1]);
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), p[0]);
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), p[1]);
     BitVector three = TestUtils.createBitVector(3, 2);
     chc.indexInverse(three, p);
-    assertEquals(TestUtils.createBitVector(1, 1), p[0]);
-    assertEquals(TestUtils.createBitVector(0, 1), p[1]);
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), p[0]);
+    Assert.assertEquals(TestUtils.createBitVector(0, 1), p[1]);
   }
 
-  public void testCompactHilbertIndexInverseFirstOrderOnX1Y0() {
+  @Test
+  public void compactHilbertIndexInverseFirstOrderOnX1Y0() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {1, 0});
     BitVector[] p = new BitVector[2];
     p[0] = BitVectorFactories.OPTIMAL.apply(1);
     p[1] = BitVectorFactories.OPTIMAL.apply(0);
     chc.indexInverse(TestUtils.createBitVector(0, 1), p);
-    assertTrue(p[0].isEmpty());
-    assertTrue(p[1].isEmpty());
+    Assert.assertTrue(p[0].isEmpty());
+    Assert.assertTrue(p[1].isEmpty());
     chc.indexInverse(TestUtils.createBitVector(1, 1), p);
-    assertEquals(TestUtils.createBitVector(1, 1), p[0]);
-    assertTrue(p[1].isEmpty());
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), p[0]);
+    Assert.assertTrue(p[1].isEmpty());
   }
 
-  public void testCompactHilbertIndexInverseFirstOrderOnX0Y1() {
+  @Test
+  public void compactHilbertIndexInverseFirstOrderOnX0Y1() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {0, 1});
     BitVector[] p = new BitVector[2];
     p[0] = BitVectorFactories.OPTIMAL.apply(0);
     p[1] = BitVectorFactories.OPTIMAL.apply(1);
     chc.indexInverse(TestUtils.createBitVector(0, 1), p);
-    assertTrue(p[0].isEmpty());
-    assertTrue(p[1].isEmpty());
+    Assert.assertTrue(p[0].isEmpty());
+    Assert.assertTrue(p[1].isEmpty());
     chc.indexInverse(TestUtils.createBitVector(1, 1), p);
-    assertTrue(p[0].isEmpty());
-    assertEquals(TestUtils.createBitVector(1, 1), p[1]);
+    Assert.assertTrue(p[0].isEmpty());
+    Assert.assertEquals(TestUtils.createBitVector(1, 1), p[1]);
   }
 
-  public void testCompactHilbertIndexesInverseForEqualSideLenghts() {
+  @Test
+  public void compactHilbertIndexesInverseForEqualSideLenghts() {
     final int bits = 8;
     for (int n = 1; n <= bits; ++n) {
       for (int order = 0; order <= bits / n; ++order) {
@@ -378,7 +394,8 @@ public class CompactHilbertCurveTest extends TestCase {
     }
   }
   
-  public void testCompactHilbertIndexInverse() {
+  @Test
+  public void compactHilbertIndexInverse() {
     TestUtils.generateSpec(4, 6, new IntArrayCallback() {
       @Override
       public void call(int[] m) {
@@ -387,7 +404,8 @@ public class CompactHilbertCurveTest extends TestCase {
     });
   }
   
-  public void testTwoDimensionsOfOrder3AndOrder1Respectively() {
+  @Test
+  public void twoDimensionsOfOrder3AndOrder1Respectively() {
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {3, 1});
     ZoomingNavigator mock = EasyMock.createStrictMock(ZoomingNavigator.class);
     EasyMock.expect(mock.visit(EasyMock.eq(3), EasyMock.eq(TestUtils.createBitVector(0, 4)),
@@ -428,7 +446,8 @@ public class CompactHilbertCurveTest extends TestCase {
     EasyMock.verify(mock);
   }
   
-  public void testAllSpaceInquiredWhenChildrenAreAlwaysRequested() {
+  @Test
+  public void allSpaceInquiredWhenChildrenAreAlwaysRequested() {
     TestUtils.generateSpec(4, 7, new IntArrayCallback() {
       @Override
       public void call(int[] m) {
@@ -441,7 +460,7 @@ public class CompactHilbertCurveTest extends TestCase {
     CompactHilbertCurve chc = new CompactHilbertCurve(m);
     HilbertOrderCheckingDriver visitor = new HilbertOrderCheckingDriver(chc);
     chc.accept(visitor);
-    assertNull(visitor.getNextExpectedHilbertIndex());
+    Assert.assertNull(visitor.getNextExpectedHilbertIndex());
   }
   
   private void matchHilbertIndexWithInverse(int[] m) {
@@ -486,8 +505,8 @@ public class CompactHilbertCurveTest extends TestCase {
       if (level == 0) {
         BitVector chi = BitVectorFactories.OPTIMAL.apply(chc.getSpec().sumBitsPerDimension());
         chc.index(p, 0, chi);
-        assertEquals(nextExpectedHilbertIndex, chi);
-        assertEquals(chi, index);
+        Assert.assertEquals(nextExpectedHilbertIndex, chi);
+        Assert.assertEquals(chi, index);
         if (!nextExpectedHilbertIndex.increment()) {
           nextExpectedHilbertIndex = null;
         }

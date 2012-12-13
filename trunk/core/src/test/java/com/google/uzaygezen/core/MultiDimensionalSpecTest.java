@@ -16,48 +16,52 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-
-
-import junit.framework.TestCase;
-
 import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Daniel Aioanei
  */
-public class MultiDimensionalSpecTest extends TestCase {
+public class MultiDimensionalSpecTest {
 
   private static final List<Integer> list = ImmutableList.of(4, 0, 2);
   private static final MultiDimensionalSpec multiDimensionalSpec = new MultiDimensionalSpec(list);
 
-  public void testMultiDimensionalSpecDissalowsNegativeBits() {
+  @Test
+  public void multiDimensionalSpecDissalowsNegativeBits() {
     try {
       new MultiDimensionalSpec(ImmutableList.of(-1));
-      fail("Negative bits shouldn't be allowed.");
+      Assert.fail("Negative bits shouldn't be allowed.");
     } catch (IllegalArgumentException ex) {
-      assertNotNull(ex.getMessage());
+      Assert.assertNotNull(ex.getMessage());
     }
   }
 
   /**
    * Conventionally called "m" in comments.
    */
-  public void testGetBitsPerDimension() {
-    assertEquals(list, multiDimensionalSpec.getBitsPerDimension());
+  @Test
+  public void getBitsPerDimension() {
+    Assert.assertEquals(list, multiDimensionalSpec.getBitsPerDimension());
   }
 
   /**
    * Conventionally called "mSum" in comments.
    */
-  public void testSumBitsPerDimension() {
-    assertEquals(6, multiDimensionalSpec.sumBitsPerDimension());
+  @Test
+  public void sumBitsPerDimension() {
+    Assert.assertEquals(6, multiDimensionalSpec.sumBitsPerDimension());
   }
 
   /**
    * Conventionally called "mMax" in comments.
    */
-  public void testMaxBitsPerDimension() {
-    assertEquals(4, multiDimensionalSpec.maxBitsPerDimension());
+  @Test
+  public void maxBitsPerDimension() {
+    Assert.assertEquals(4, multiDimensionalSpec.maxBitsPerDimension());
   }
 }

@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang3.ArrayUtils;
-
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import com.google.common.base.Function;
 import com.google.common.primitives.Bytes;
@@ -38,14 +38,39 @@ import com.google.common.primitives.Longs;
  * @author Daniel Aioanei
  * @author Radu Grigore
  */
-public class BitVectorTest extends TestCase {
+public class BitVectorTest {
 
   private static final Random random = new Random(123);
 
-  public void testSet() {
+  @Test
+  public void emptyRange() {
+    checkEmptyRange(BitVectorFactories.OPTIMAL);
+    checkEmptyRange(BitVectorFactories.SLOW);
+    checkEmptyRange(BitVectorFactories.LONG_ARRAY);
+  }
+  
+  @Test
+  public void set() {
     checkSet(BitVectorFactories.OPTIMAL);
     checkSet(BitVectorFactories.SLOW);
     checkSet(BitVectorFactories.LONG_ARRAY);
+  }
+
+  private void checkEmptyRange(Function<Integer, BitVector> factory) {
+    for (int j = 0; j < 128; j++) {
+      BitVector b = factory.apply(j);
+      BitVector expected = b.clone();
+      b.clear(j, j);
+      Assert.assertEquals(expected, b);
+      factory.apply(0).copyFromSection(b, j);
+      Assert.assertEquals(expected, b);
+      b.flip(j, j);
+      Assert.assertEquals(expected, b);
+      b.set(j, j);
+      Assert.assertEquals(expected, b);
+      b.set(j, j, false);
+      Assert.assertEquals(expected, b);
+    }
   }
 
   private void checkSet(Function<Integer, BitVector> factory) {
@@ -53,12 +78,13 @@ public class BitVectorTest extends TestCase {
       BitVector b = factory.apply(j);
       for (int i = 0; i < j; i++) {
         b.set(i);
-        assertTrue(b.get(i));
+        Assert.assertTrue(b.get(i));
       }
     }
   }
 
-  public void testSetIllegalIndex() {
+  @Test
+  public void setIllegalIndex() {
     checkSetIllegalIndex(BitVectorFactories.OPTIMAL);
     checkSetIllegalIndex(BitVectorFactories.SLOW);
     checkSetIllegalIndex(BitVectorFactories.LONG_ARRAY);
@@ -69,13 +95,13 @@ public class BitVectorTest extends TestCase {
       BitVector b = factory.apply(i);
       try {
         b.set(-1);
-        fail("IndexOutOfBoundsException expected");
+        Assert.fail("IndexOutOfBoundsException expected");
       } catch (IndexOutOfBoundsException e) {
         // ok
       }
       try {
         b.set(i);
-        fail("IndexOutOfBoundsException expected");
+        Assert.fail("IndexOutOfBoundsException expected");
       } catch (IndexOutOfBoundsException e) {
         // ok
       }
@@ -86,19 +112,20 @@ public class BitVectorTest extends TestCase {
     for (int j = 0; j < 128; j++) {
       BitVector b = factory.apply(j);
       for (int i = 0; i < b.size(); i++) {
-        assertEquals(i, b.cardinality());
+        Assert.assertEquals(i, b.cardinality());
         b.set(i);
       }
-      assertEquals(b.size(), b.cardinality());
+      Assert.assertEquals(b.size(), b.cardinality());
       for (int i = b.size() - 1; i >= 0; i--) {
-        assertEquals(i + 1, b.cardinality());
+        Assert.assertEquals(i + 1, b.cardinality());
         b.clear(i);
       }
-      assertEquals(0, b.cardinality());
+      Assert.assertEquals(0, b.cardinality());
     }
   }
 
-  public void testCardinality() {
+  @Test
+  public void cardinality() {
     checkCardinality(BitVectorFactories.OPTIMAL);
     checkCardinality(BitVectorFactories.SLOW);
     checkCardinality(BitVectorFactories.LONG_ARRAY);
@@ -118,11 +145,12 @@ public class BitVectorTest extends TestCase {
     for (int i = 0; i < 128; i++) {
       BitVector b = factory.apply(i);
       setAllBits(b);
-      assertEquals(b.size(), b.cardinality());
+      Assert.assertEquals(b.size(), b.cardinality());
     }
   }
 
-  public void testClearAll() {
+  @Test
+  public void clearAll() {
     checkClearAll(BitVectorFactories.OPTIMAL);
     checkClearAll(BitVectorFactories.SLOW);
     checkClearAll(BitVectorFactories.LONG_ARRAY);
@@ -132,7 +160,7 @@ public class BitVectorTest extends TestCase {
     for (int i = 0; i < 128; i++) {
       BitVector b = factory.apply(i);
       b.clear();
-      assertEquals(0, b.cardinality());
+      Assert.assertEquals(0, b.cardinality());
     }
   }
 
@@ -140,11 +168,12 @@ public class BitVectorTest extends TestCase {
     setAllBits(b);
     for (int i = 0; i < b.size(); i++) {
       b.clear(i);
-      assertFalse(b.get(i));
+      Assert.assertFalse(b.get(i));
     }
   }
 
-  public void testClear() {
+  @Test
+  public void clear() {
     checkClear(BitVectorFactories.OPTIMAL);
     checkClear(BitVectorFactories.SLOW);
     checkClear(BitVectorFactories.LONG_ARRAY);
@@ -156,7 +185,8 @@ public class BitVectorTest extends TestCase {
     }
   }
 
-  public void testToLong() {
+  @Test
+  public void toLong() {
     checkToLong(BitVectorFactories.OPTIMAL);
     checkToLong(BitVectorFactories.SLOW);
     checkToLong(BitVectorFactories.LONG_ARRAY);
@@ -172,11 +202,12 @@ public class BitVectorTest extends TestCase {
       for (int j = 0; j < i && j < 64; j += 2) {
         reference |= 1L << j;
       }
-      assertEquals(reference, bv.toLong());
+      Assert.assertEquals(reference, bv.toLong());
     }
   }
 
-  public void testCopyFrom() {
+  @Test
+  public void copyFrom() {
     checkCopyFrom(BitVectorFactories.OPTIMAL);
     checkCopyFrom(BitVectorFactories.SLOW);
     checkCopyFrom(BitVectorFactories.LONG_ARRAY);
@@ -187,7 +218,7 @@ public class BitVectorTest extends TestCase {
     BitVector bv = factory.apply(size);
     for (long i = 1 << size; --i >= 0; ) {
       bv.copyFrom(i);
-      assertEquals(i, bv.toLong());
+      Assert.assertEquals(i, bv.toLong());
     }
 
     final int bigSize = 1000;
@@ -198,11 +229,12 @@ public class BitVectorTest extends TestCase {
     bv = factory.apply(bigSize);
     bv.copyFrom(bs);
     for (int i = 0; i < bigSize; ++i) {
-      assertEquals(i % 3 == 0, bv.get(i));
+      Assert.assertEquals(i % 3 == 0, bv.get(i));
     }
   }
 
-  public void testCopyFromBigEndian64Bits() {
+  @Test
+  public void copyFromBigEndian64Bits() {
     checkCopyFromBigEndian64Bits(BitVectorFactories.OPTIMAL);
     checkCopyFromBigEndian64Bits(BitVectorFactories.SLOW);
     checkCopyFromBigEndian64Bits(BitVectorFactories.LONG_ARRAY);
@@ -225,18 +257,19 @@ public class BitVectorTest extends TestCase {
           byte[] bytes = Arrays.copyOfRange(
             bigEndian, bigEndian.length - n, bigEndian.length);
           bv.copyFromBigEndian(bytes);
-          assertEquals(Long.bitCount(k), bv.cardinality());
+          Assert.assertEquals(Long.bitCount(k), bv.cardinality());
           if (k != bv.toExactLong()) {
             bv.copyFromBigEndian(bytes);
             bv.toExactLong();
           }
-          assertEquals(bv.getClass().toString(), k, bv.toExactLong());
+          Assert.assertEquals(bv.getClass().toString(), k, bv.toExactLong());
         }
       }
     }
   }
 
-  public void testLength() {
+  @Test
+  public void length() {
     checkLength(BitVectorFactories.OPTIMAL);
     checkLength(BitVectorFactories.SLOW);
     checkLength(BitVectorFactories.LONG_ARRAY);
@@ -244,49 +277,56 @@ public class BitVectorTest extends TestCase {
 
   private void checkLength(Function<Integer, BitVector> factory) {
     BitVector b = factory.apply(0);
-    assertEquals(0, b.length());
+    Assert.assertEquals(0, b.length());
     for (int j = 1; j < 128; j++) {
-      assertEquals(0, b.length());
+      Assert.assertEquals(0, b.length());
       for (int i = 0; i < b.length(); i++) {
         b.set(i);
-        assertEquals(i + 1, b.length());
+        Assert.assertEquals(i + 1, b.length());
       }
     }
   }
 
-  public void testClearRange() {
+  @Test
+  public void clearRange() {
     checkClearRange(BitVectorFactories.OPTIMAL);
     checkClearRange(BitVectorFactories.SLOW);
     checkClearRange(BitVectorFactories.LONG_ARRAY);
   }
 
   private void checkClearRange(Function<Integer, BitVector> factory) {
+    String factoryString = factory.toString();
     for (int size = 0; size <= 100; size += 10) {
       BitVector b = factory.apply(size);
       // clearing (0, 0) shouldn't change anything.
       setAllBits(b);
       b.clear(0, 0);
-      assertEquals(b.size(), b.cardinality());
+      Assert.assertEquals(b.size(), b.cardinality());
       // clear all (0, len) second arg is exclusive.
       setAllBits(b);
       b.clear(0, b.size());
-      assertEquals(0, b.cardinality());
+      try {
+        Assert.assertEquals(factoryString, 0, b.cardinality());
+      } catch (AssertionError e) {
+        b.clear(0, b.size());
+      }
       // Clear using all sizes and combinations up to length
       for (int i = 0; i < b.size(); i++) {
         for (int j = i; j < b.size(); j++) {
           setAllBits(b);
           b.clear(i, j);
-          assertEquals(b.size() - (j - i), b.cardinality());
+          Assert.assertEquals(b.size() - (j - i), b.cardinality());
           // Test if it actually set correct bits to 0
           for (int k = i; k < j; k++) {
-            assertFalse(b.get(k));
+            Assert.assertFalse(b.get(k));
           }
         }
       }
     }
   }
 
-  public void testSetRange() {
+  @Test
+  public void setRange() {
     checkSetRange(BitVectorFactories.OPTIMAL);
     checkSetRange(BitVectorFactories.SLOW);
     checkSetRange(BitVectorFactories.LONG_ARRAY);
@@ -298,27 +338,28 @@ public class BitVectorTest extends TestCase {
       // setting (0, 0) shouldn't change anything.
       b.clear();
       b.set(0, 0);
-      assertEquals(0, b.cardinality());
+      Assert.assertEquals(0, b.cardinality());
       // set all (0, len) second arg is exclusive.
       b.clear();
       b.set(0, b.size());
-      assertEquals(b.size(), b.cardinality());
+      Assert.assertEquals(b.size(), b.cardinality());
       // Set using all sizes and combinations up to length
       for (int i = 0; i < b.size(); i++) {
         for (int j = i; j < b.size(); j++) {
           b.clear();
           b.set(i, j);
-          assertEquals((j - i), b.cardinality());
+          Assert.assertEquals((j - i), b.cardinality());
           // Test if it actually set correct bits to 1
           for (int k = i; k < j; k++) {
-            assertTrue(b.get(k));
+            Assert.assertTrue(b.get(k));
           }
         }
       }
     }
   }
 
-  public void testFlip() {
+  @Test
+  public void flip() {
     checkFlip(BitVectorFactories.OPTIMAL);
     checkFlip(BitVectorFactories.SLOW);
     checkFlip(BitVectorFactories.LONG_ARRAY);
@@ -328,14 +369,15 @@ public class BitVectorTest extends TestCase {
     for (int size = 0; size < 200; size++) {
       BitVector b = factory.apply(size);
       for (int i = 0; i < size; i++) {
-        assertFalse(b.get(i));
+        Assert.assertFalse(b.get(i));
         b.flip(i);
-        assertTrue(b.get(i));
+        Assert.assertTrue(b.get(i));
       }
     }
   }
 
-  public void testFlipRange() {
+  @Test
+  public void flipRange() {
     checkFlipRange(BitVectorFactories.OPTIMAL);
     checkFlipRange(BitVectorFactories.SLOW);
     checkFlipRange(BitVectorFactories.LONG_ARRAY);
@@ -347,39 +389,40 @@ public class BitVectorTest extends TestCase {
       // setting (0, 0) shouldn't change anything.
       b.clear();
       b.flip(0, 0);
-      assertEquals(0, b.cardinality());
+      Assert.assertEquals(0, b.cardinality());
       // flip all (0, len) second arg is exclusive.
       b.clear();
       b.flip(0, b.size());
-      assertEquals(b.size(), b.cardinality());
+      Assert.assertEquals(b.size(), b.cardinality());
       // and set it back to 0
       b.flip(0, b.size());
-      assertEquals(0, b.cardinality());
+      Assert.assertEquals(0, b.cardinality());
       // set using all sizes up to len
       for (int i = 0; i < b.size(); i++) {
         for (int j = i; j < b.size(); j++) {
           b.clear();
           b.flip(i, j);
-          assertEquals((j - i), b.cardinality());
+          Assert.assertEquals((j - i), b.cardinality());
           for (int k = i; k < j; k++) {
-            assertTrue(b.get(k));
+            Assert.assertTrue(b.get(k));
           }
           b.flip(i, j);
-          assertEquals(0, b.cardinality());
+          Assert.assertEquals(0, b.cardinality());
           setAllBits(b);
           b.flip(i, j);
-          assertEquals(b.size() - (j - i), b.cardinality());
+          Assert.assertEquals(b.size() - (j - i), b.cardinality());
           for (int k = i; k < j; k++) {
-            assertFalse(b.get(k));
+            Assert.assertFalse(b.get(k));
           }
           b.flip(i, j);
-          assertEquals(b.size(), b.cardinality());
+          Assert.assertEquals(b.size(), b.cardinality());
         }
       }
     }
   }
 
-  public void testGet() {
+  @Test
+  public void get() {
     checkGet(BitVectorFactories.OPTIMAL);
     checkGet(BitVectorFactories.SLOW);
     checkGet(BitVectorFactories.LONG_ARRAY);
@@ -400,11 +443,12 @@ public class BitVectorTest extends TestCase {
 
   private void checkGet(BitVector b, int i, BitVector b2) {
     b2.copyFromSection(b, 0);
-    assertEquals(i, b2.size());
-    assertEquals(i, b2.cardinality());
+    Assert.assertEquals(i, b2.size());
+    Assert.assertEquals(i, b2.cardinality());
   }
 
-  public void testAnd() {
+  @Test
+  public void and() {
     checkAnd(BitVectorFactories.OPTIMAL);
     checkAnd(BitVectorFactories.SLOW);
     checkAnd(BitVectorFactories.LONG_ARRAY);
@@ -414,7 +458,7 @@ public class BitVectorTest extends TestCase {
     BitVector b = factory.apply(0);
     BitVector b2 = b.clone();
     b.and(b2);
-    assertTrue(b.isEmpty());
+    Assert.assertTrue(b.isEmpty());
     for (int i = 1; i < 128; i++) {
       checkAnd(factory.apply(i));
     }
@@ -424,17 +468,18 @@ public class BitVectorTest extends TestCase {
     BitVector b2 = b.clone();
     b2.clear();
     setAllBits(b);
-    assertEquals(b.size(), b.cardinality());
+    Assert.assertEquals(b.size(), b.cardinality());
     b.and(b2);
-    assertEquals(0, b.cardinality());
+    Assert.assertEquals(0, b.cardinality());
     b.set(0);
     b2.set(0);
     b.and(b2);
-    assertTrue(b.get(0));
-    assertEquals(b, b2);
+    Assert.assertTrue(b.get(0));
+    Assert.assertEquals(b, b2);
   }
 
-  public void testAndNotForSizeZero() {
+  @Test
+  public void andNotForSizeZero() {
     checkAndNotForSizeZero(BitVectorFactories.OPTIMAL);
     checkAndNotForSizeZero(BitVectorFactories.SLOW);
     checkAndNotForSizeZero(BitVectorFactories.LONG_ARRAY);
@@ -444,10 +489,11 @@ public class BitVectorTest extends TestCase {
     BitVector b = factory.apply(0);
     BitVector b2 = b.clone();
     b.andNot(b2);
-    assertTrue(b.isEmpty());
+    Assert.assertTrue(b.isEmpty());
   }
 
-  public void testOrForSizeZero() {
+  @Test
+  public void orForSizeZero() {
     checkOrForSizeZero(BitVectorFactories.OPTIMAL);
     checkOrForSizeZero(BitVectorFactories.SLOW);
     checkOrForSizeZero(BitVectorFactories.LONG_ARRAY);
@@ -457,10 +503,11 @@ public class BitVectorTest extends TestCase {
     BitVector b = factory.apply(0);
     BitVector b2 = b.clone();
     b.or(b2);
-    assertTrue(b.isEmpty());
+    Assert.assertTrue(b.isEmpty());
   }
 
-  public void testXorForSizeZero() {
+  @Test
+  public void xorForSizeZero() {
     checkXorForSizeZero(BitVectorFactories.OPTIMAL);
     checkXorForSizeZero(BitVectorFactories.SLOW);
     checkXorForSizeZero(BitVectorFactories.LONG_ARRAY);
@@ -470,10 +517,11 @@ public class BitVectorTest extends TestCase {
     BitVector b = factory.apply(0);
     BitVector b2 = b.clone();
     b.xor(b2);
-    assertTrue(b.isEmpty());
+    Assert.assertTrue(b.isEmpty());
   }
 
-  public void testGetNextClearBit() {
+  @Test
+  public void getNextClearBit() {
     checkGetNextClearBit(BitVectorFactories.OPTIMAL);
     checkGetNextClearBit(BitVectorFactories.SLOW);
     checkGetNextClearBit(BitVectorFactories.LONG_ARRAY);
@@ -484,12 +532,13 @@ public class BitVectorTest extends TestCase {
       BitVector b = factory.apply(size);
       for (int i = 0; i < b.size() - 1; i++) {
         b.set(i);
-        assertEquals(i + 1, b.nextClearBit(0));
+        Assert.assertEquals(i + 1, b.nextClearBit(0));
       }
     }
   }
 
-  public void testGetNextSetBit() {
+  @Test
+  public void getNextSetBit() {
     checkGetNextSetBit(BitVectorFactories.OPTIMAL);
     checkGetNextSetBit(BitVectorFactories.SLOW);
     checkGetNextSetBit(BitVectorFactories.LONG_ARRAY);
@@ -501,12 +550,13 @@ public class BitVectorTest extends TestCase {
       setAllBits(b);
       for (int i1 = 0; i1 < b.size() - 1; i1++) {
         b.clear(i1);
-        assertEquals(i1 + 1, b.nextSetBit(0));
+        Assert.assertEquals(i1 + 1, b.nextSetBit(0));
       }
     }
   }
 
-  public void testRotateAllZerosAndAllOnes() {
+  @Test
+  public void rotateAllZerosAndAllOnes() {
     checkRotateAllZeroesAndAllOnes(BitVectorFactories.OPTIMAL);
     checkRotateAllZeroesAndAllOnes(BitVectorFactories.SLOW);
     checkRotateAllZeroesAndAllOnes(BitVectorFactories.LONG_ARRAY);
@@ -519,18 +569,19 @@ public class BitVectorTest extends TestCase {
       BitVector b2 = b.clone();
       for (int i = -size * 4; i < size * 4; i++) {
         b.rotate(i);
-        assertEquals(b2, b);
+        Assert.assertEquals(b2, b);
       }
       setAllBits(b);
       b2 = b.clone();
       for (int i = -size * 4; i < size * 4; i++) {
         b.rotate(i);
-        assertEquals(b2, b);
+        Assert.assertEquals(b2, b);
       }
     }
   }
 
-  public void testRotate() {
+  @Test
+  public void rotate() {
     checkRotate(BitVectorFactories.OPTIMAL);
     checkRotate(BitVectorFactories.SLOW);
     checkRotate(BitVectorFactories.LONG_ARRAY);
@@ -547,7 +598,7 @@ public class BitVectorTest extends TestCase {
           int cardinality = b.cardinality();
           for (int k = -size * 2; k < size * 2; k += step) {
             b.rotate(k);
-            assertEquals(cardinality, b.cardinality());
+            Assert.assertEquals(cardinality, b.cardinality());
           }
         }
       }
@@ -556,13 +607,13 @@ public class BitVectorTest extends TestCase {
 
   private void checkGrayCode(BitVector b) {
     BitVector bo = b.clone();
-    assertEquals(0, hammingDistance(b, bo));
+    Assert.assertEquals(0, hammingDistance(b, bo));
     bo.grayCode();
     if (!b.increment()) {
       return;
     }
     b.grayCode();
-    assertEquals(1, hammingDistance(b, bo));
+    Assert.assertEquals(1, hammingDistance(b, bo));
   }
 
   private static int hammingDistance(BitVector x, BitVector y) {
@@ -571,7 +622,8 @@ public class BitVectorTest extends TestCase {
     return cx.cardinality();
   }
 
-  public void testGrayCode() {
+  @Test
+  public void grayCode() {
     checkGrayCode(BitVectorFactories.OPTIMAL);
     checkGrayCode(BitVectorFactories.SLOW);
     checkGrayCode(BitVectorFactories.LONG_ARRAY);
@@ -580,12 +632,12 @@ public class BitVectorTest extends TestCase {
   private void checkGrayCode(Function<Integer, BitVector> factory) {
     BitVector bv = factory.apply(0);
     bv.grayCode();
-    assertTrue(bv.isEmpty());
+    Assert.assertTrue(bv.isEmpty());
     bv = factory.apply(1);
     bv.set(0);
     BitVector expected = bv.clone();
     bv.grayCode();
-    assertEquals(expected, bv);
+    Assert.assertEquals(expected, bv);
     for (int i = 0; i <= 200; i += 10) {
       BitVector b = factory.apply(i);
       for (int j = 0; j < 1000; ++j) {
@@ -606,14 +658,15 @@ public class BitVectorTest extends TestCase {
 
   private void checkGrayCodeInverse(BitVector b) {
     BitVector bo = b.clone();
-    assertEquals(0, hammingDistance(b, bo));
+    Assert.assertEquals(0, hammingDistance(b, bo));
     b.grayCode();
     b.grayCodeInverse();
-    assertEquals(bo, b);
+    Assert.assertEquals(bo, b);
     b.increment();
   }
 
-  public void testGrayCodeInverse() {
+  @Test
+  public void grayCodeInverse() {
     checkGrayCodeInverse(BitVectorFactories.OPTIMAL);
     checkGrayCodeInverse(BitVectorFactories.SLOW);
     checkGrayCodeInverse(BitVectorFactories.LONG_ARRAY);
@@ -622,13 +675,13 @@ public class BitVectorTest extends TestCase {
   private void checkGrayCodeInverse(Function<Integer, BitVector> factory) {
     BitVector bv = factory.apply(0);
     bv.grayCodeInverse();
-    assertTrue(bv.isEmpty());
+    Assert.assertTrue(bv.isEmpty());
     bv = factory.apply(1);
     bv.set(0);
     BitVector expected = bv.clone();
     bv.grayCode();
     bv.grayCodeInverse();
-    assertEquals(expected, bv);
+    Assert.assertEquals(expected, bv);
     for (int i = 0; i <= 200; i += 10) {
       BitVector b = factory.apply(i);
       for (int j = 0; j < 1000; ++j) {
@@ -647,7 +700,8 @@ public class BitVectorTest extends TestCase {
     }
   }
 
-  public void testEqualsAndHashCode() {
+  @Test
+  public void equalsAndHashCode() {
     final int size = 10;
     for (long i = 1 << size; --i >= 0; ) {
       checkEqualsAndHashCode(size, i);
@@ -696,7 +750,8 @@ public class BitVectorTest extends TestCase {
     MoreAsserts.checkEqualsAndHashCodeMethods(c, d, true);
   }
   
-  public void testSmallerEvenAndGrayCode() {
+  @Test
+  public void smallerEvenAndGrayCode() {
     checkEntryVertex(BitVectorFactories.SLOW);
     checkEntryVertex(BitVectorFactories.OPTIMAL);
     checkEntryVertex(BitVectorFactories.LONG_ARRAY);
@@ -714,11 +769,12 @@ public class BitVectorTest extends TestCase {
         int j = (i - 1) & ~1;
         expected = TestUtils.createBitVector(j ^ (j >>> 1), 10);
       }
-      assertEquals(expected, bs);
+      Assert.assertEquals(expected, bs);
     }
   }
 
-  public void testSmallerEvenAndGrayCodeForTwoBits() {
+  @Test
+  public void smallerEvenAndGrayCodeForTwoBits() {
     checkEntryVertexForTwoDimensions(BitVectorFactories.SLOW);
     checkEntryVertexForTwoDimensions(BitVectorFactories.OPTIMAL);
     checkEntryVertexForTwoDimensions(BitVectorFactories.LONG_ARRAY);
@@ -731,19 +787,20 @@ public class BitVectorTest extends TestCase {
   public void checkEntryVertexForTwoDimensions(Function<Integer, BitVector> factory) {
     BitVector bs = factory.apply(2);
     bs.smallerEvenAndGrayCode();
-    assertEquals(TestUtils.createBitVector(0, 2), bs);
+    Assert.assertEquals(TestUtils.createBitVector(0, 2), bs);
     bs.set(0);
     bs.smallerEvenAndGrayCode();
-    assertEquals(TestUtils.createBitVector(0, 2), bs);
+    Assert.assertEquals(TestUtils.createBitVector(0, 2), bs);
     bs.set(1);
     bs.smallerEvenAndGrayCode();
-    assertEquals(TestUtils.createBitVector(0, 2), bs);
+    Assert.assertEquals(TestUtils.createBitVector(0, 2), bs);
     bs.set(0, 2);
     bs.smallerEvenAndGrayCode();
-    assertEquals(TestUtils.createBitVector(3, 2), bs);
+    Assert.assertEquals(TestUtils.createBitVector(3, 2), bs);
   }
   
-  public void testGrayCodeRankWithAllFreeBitsIsIdentityFunction() {
+  @Test
+  public void grayCodeRankWithAllFreeBitsIsIdentityFunction() {
     checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(BitVectorFactories.SLOW);
     checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(BitVectorFactories.OPTIMAL);
     checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(BitVectorFactories.LONG_ARRAY);
@@ -761,7 +818,7 @@ public class BitVectorTest extends TestCase {
     for (int i = 0; i < pow2n; ++i) {
       BitVector r = factory.apply(mu.cardinality());
       r.grayCodeRank(mu, bs);
-      assertEquals(bs, r);
+      Assert.assertEquals(bs, r);
       bs.increment();
     }
 
@@ -775,11 +832,12 @@ public class BitVectorTest extends TestCase {
         bs.set(j, random.nextBoolean());
       }
       r.grayCodeRank(mu, bs);
-      assertEquals(bs, r);
+      Assert.assertEquals(bs, r);
     }
   }
 
-  public void testGrayCodeRankRemovesConstrainedBits() {
+  @Test
+  public void grayCodeRankRemovesConstrainedBits() {
     checkGrayCodeRankRemovesConstrainedBits(BitVectorFactories.SLOW);
     checkGrayCodeRankRemovesConstrainedBits(BitVectorFactories.OPTIMAL);
     checkGrayCodeRankRemovesConstrainedBits(BitVectorFactories.LONG_ARRAY);
@@ -793,17 +851,18 @@ public class BitVectorTest extends TestCase {
     bs.set(0);
     BitVector r = factory.apply(1);
     r.grayCodeRank(mu, bs);
-    assertTrue(r.isEmpty());
+    Assert.assertTrue(r.isEmpty());
     bs.set(1);
     BitVector expected = TestUtils.createBitVector(1, 1);
     r.grayCodeRank(mu, bs);
-    assertEquals(expected, r);
+    Assert.assertEquals(expected, r);
     bs.set(2);
     r.grayCodeRank(mu, bs);
-    assertEquals(expected, r);
+    Assert.assertEquals(expected, r);
   }
 
-  public void testGrayCodeRankIsPlainPatternRank() {
+  @Test
+  public void grayCodeRankIsPlainPatternRank() {
     checkGrayCodeRankIsPlainPatternRank(BitVectorFactories.SLOW);
     checkGrayCodeRankIsPlainPatternRank(BitVectorFactories.OPTIMAL);
     checkGrayCodeRankIsPlainPatternRank(BitVectorFactories.LONG_ARRAY);
@@ -835,12 +894,13 @@ public class BitVectorTest extends TestCase {
         BitVector jAsBitVector = TestUtils.createBitVector(j, freeBitsPattern.cardinality());
         BitVector r = factory.apply(freeBitsPattern.cardinality());
         r.grayCodeRank(freeBitsPattern, grayCodeInverseList.get(j));
-        assertEquals(jAsBitVector, r);
+        Assert.assertEquals(jAsBitVector, r);
       }
     }
   }
 
-  public void testBigGrayCodeRankAndInverse() {
+  @Test
+  public void bigGrayCodeRankAndInverse() {
     checkBigGrayCodeRankAndInverse(BitVectorFactories.SLOW);
     checkBigGrayCodeRankAndInverse(BitVectorFactories.OPTIMAL);
     checkBigGrayCodeRankAndInverse(BitVectorFactories.LONG_ARRAY);
@@ -862,11 +922,12 @@ public class BitVectorTest extends TestCase {
       gx.andNot(m);
       BitVector shouldBeX = factory.apply(bigSize);
       shouldBeX.grayCodeRankInverse(m, gx, r);
-      assertEquals(x, shouldBeX);
+      Assert.assertEquals(x, shouldBeX);
     }
   }
   
-  public void testGrayCodeRankInverse() {
+  @Test
+  public void grayCodeRankInverse() {
     checkGrayCodeRankInverse(BitVectorFactories.SLOW);
     checkGrayCodeRankInverse(BitVectorFactories.OPTIMAL);
     checkGrayCodeRankInverse(BitVectorFactories.LONG_ARRAY);
@@ -887,9 +948,9 @@ public class BitVectorTest extends TestCase {
           known.andNot(mu);
           BitVector actual = factory.apply(n);
           actual.grayCodeRankInverse(mu, known, grayCodeRank);
-          assertEquals(yetAnotherGrayCodeRankInverse(factory, n, mu, known, grayCodeRank), actual);
+          Assert.assertEquals(yetAnotherGrayCodeRankInverse(factory, n, mu, known, grayCodeRank), actual);
           actual.grayCode();
-          assertEquals(iAsBitVector, actual);
+          Assert.assertEquals(iAsBitVector, actual);
         }
       }
     }
@@ -916,7 +977,8 @@ public class BitVectorTest extends TestCase {
     return i;
   }
   
-  public void testFirstDifferentLowestBitCount() {
+  @Test
+  public void firstDifferentLowestBitCount() {
     checkIntraSubHypercubeDirection(BitVectorFactories.SLOW);
     checkIntraSubHypercubeDirection(BitVectorFactories.OPTIMAL);
     checkIntraSubHypercubeDirection(BitVectorFactories.LONG_ARRAY);
@@ -939,12 +1001,13 @@ public class BitVectorTest extends TestCase {
         }
         BitVector bv = factory.apply(n);
         bv.copyFrom(i);
-        assertEquals(expected, bv.lowestDifferentBit());
+        Assert.assertEquals(expected, bv.lowestDifferentBit());
       }
     }
   }
 
-  public void testAreAllLowestBitsClear() {
+  @Test
+  public void areAllLowestBitsClear() {
     checkAreAllLowestBitsClear(BitVectorFactories.SLOW);
     checkAreAllLowestBitsClear(BitVectorFactories.OPTIMAL);
     checkAreAllLowestBitsClear(BitVectorFactories.LONG_ARRAY);
@@ -954,18 +1017,19 @@ public class BitVectorTest extends TestCase {
     for (int size = 0; size <= 100; size += 10) {
       BitVector v = factory.apply(size);
       for (int i = 0; i <= size; ++i) {
-        assertTrue(v.areAllLowestBitsClear(i));
+        Assert.assertTrue(v.areAllLowestBitsClear(i));
       }
       for (int i = size; --i >= 0; ) {
         v.set(i);
         for (int j = 0; j <= size; ++j) {
-          assertEquals(j <= i, v.areAllLowestBitsClear(j));
+          Assert.assertEquals(j <= i, v.areAllLowestBitsClear(j));
         }
       }
     }
   }
 
-  public void testLowestDifferentBitForTwoDimensions() {
+  @Test
+  public void lowestDifferentBitForTwoDimensions() {
     checkIntraSubHypercubeDirectionForTwoDimensions(BitVectorFactories.SLOW);
     checkIntraSubHypercubeDirectionForTwoDimensions(BitVectorFactories.OPTIMAL);
     checkIntraSubHypercubeDirectionForTwoDimensions(BitVectorFactories.LONG_ARRAY);
@@ -980,16 +1044,17 @@ public class BitVectorTest extends TestCase {
     // dimension 0 is y; dimension 1 is x
     BitVector bv = factory.apply(2);
     bv.copyFrom(0);
-    assertEquals(0, bv.lowestDifferentBit());
+    Assert.assertEquals(0, bv.lowestDifferentBit());
     bv.copyFrom(1);
-    assertEquals(1, bv.lowestDifferentBit());
+    Assert.assertEquals(1, bv.lowestDifferentBit());
     bv.copyFrom(2);
-    assertEquals(1, bv.lowestDifferentBit());
+    Assert.assertEquals(1, bv.lowestDifferentBit());
     bv.copyFrom(3);
-    assertEquals(0, bv.lowestDifferentBit());
+    Assert.assertEquals(0, bv.lowestDifferentBit());
   }
   
-  public void testCopySectionFrom() {
+  @Test
+  public void copySectionFrom() {
     checkCopySectionFrom(BitVectorFactories.SLOW);
     checkCopySectionFrom(BitVectorFactories.OPTIMAL);
     checkCopySectionFrom(BitVectorFactories.LONG_ARRAY);
@@ -1005,47 +1070,52 @@ public class BitVectorTest extends TestCase {
           for (int num = 0; num < 1 << len; ++num) {
             src.copyFrom(num);
             bv.copySectionFrom(offset, src);
-            assertEquals(num << offset, bv.toExactLong());
+            Assert.assertEquals(num << offset, bv.toExactLong());
           }
           bv.copyFrom((1 << bitCount) - 1);
           for (int num = 0; num < 1 << len; ++num) {
             src.copyFrom(num);
             bv.copySectionFrom(offset, src);
             long actual = bv.toExactLong();
-            assertEquals(num, actual >>> offset & ((1 << len) - 1));
-            assertEquals((1 << offset) - 1, actual & ((1 << offset) - 1));
-            assertEquals((1 << bitCount - offset - len) - 1, actual >> offset + len);
+            Assert.assertEquals(num, actual >>> offset & ((1 << len) - 1));
+            Assert.assertEquals((1 << offset) - 1, actual & ((1 << offset) - 1));
+            Assert.assertEquals((1 << bitCount - offset - len) - 1, actual >> offset + len);
           }
         }
       }
     }
   }
 
-  public void testToLongArrayForSingleWord() {
+  @Test
+  public void toLongArrayForSingleWord() {
     checkToLongArrayForSingleWord(BitVectorFactories.SLOW);
     checkToLongArrayForSingleWord(BitVectorFactories.OPTIMAL);
     checkToLongArrayForSingleWord(BitVectorFactories.LONG_ARRAY);
   }
 
-  public void testToLongArrayForTwoWords() {
+  @Test
+  public void toLongArrayForTwoWords() {
     checkToLongArrayForTwoWords(BitVectorFactories.SLOW);
     checkToLongArrayForTwoWords(BitVectorFactories.OPTIMAL);
     checkToLongArrayForTwoWords(BitVectorFactories.LONG_ARRAY);
   }
   
-  public void testToBigEndianByteArrayForSingleWord() {
+  @Test
+  public void toBigEndianByteArrayForSingleWord() {
     checkToBigEndianByteArrayForSingleWord(BitVectorFactories.SLOW);
     checkToBigEndianByteArrayForSingleWord(BitVectorFactories.OPTIMAL);
     checkToBigEndianByteArrayForSingleWord(BitVectorFactories.LONG_ARRAY);
   }
 
-  public void testToBigEndianByteArrayForTwoWords() {
+  @Test
+  public void toBigEndianByteArrayForTwoWords() {
     checkToBigEndianByteArrayForTwoWords(BitVectorFactories.SLOW);
     checkToBigEndianByteArrayForTwoWords(BitVectorFactories.OPTIMAL);
     checkToBigEndianByteArrayForTwoWords(BitVectorFactories.LONG_ARRAY);
   }
 
-  public void testToBigEndianByteArrayAndCopyFromBigEndianAreInverse() {
+  @Test
+  public void toBigEndianByteArrayAndCopyFromBigEndianAreInverse() {
     checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.SLOW);
     checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.OPTIMAL);
     checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.LONG_ARRAY);
@@ -1091,7 +1161,7 @@ public class BitVectorTest extends TestCase {
       v.set(2 * i);
     }
     long[] longArray = v.toLongArray();
-    MoreAsserts.assertEquals(new long[] {0x5555555555555555L, 0x5555555555555555L}, longArray);
+    Assert.assertArrayEquals(new long[] {0x5555555555555555L, 0x5555555555555555L}, longArray);
   }
 
   private void checkEvenBitsToBigEndianByteArray(Function<Integer, BitVector> factory) {
@@ -1110,7 +1180,7 @@ public class BitVectorTest extends TestCase {
       v.set(2 * i + 1);
     }
     long[] longArray = v.toLongArray();
-    MoreAsserts.assertEquals(new long[] {0xAAAAAAAAAAAAAAAAL, 0xAAAAAAAAAAAAAAAAL}, longArray);
+    Assert.assertArrayEquals(new long[] {0xAAAAAAAAAAAAAAAAL, 0xAAAAAAAAAAAAAAAAL}, longArray);
   }
   
   private void checkOddBitsToBigEndianByteArray(Function<Integer, BitVector> factory) {
@@ -1160,10 +1230,10 @@ public class BitVectorTest extends TestCase {
     long[] array = v.toLongArray();
     if (v.size() == 0) {
       assert i == 0;
-      assertEquals(0, array.length);
+      Assert.assertEquals(0, array.length);
     } else {
-      assertEquals(1, array.length);
-      assertEquals(i, array[0]);
+      Assert.assertEquals(1, array.length);
+      Assert.assertEquals(i, array[0]);
     }
   }
 
@@ -1172,10 +1242,10 @@ public class BitVectorTest extends TestCase {
     byte[] array = v.toBigEndianByteArray();
     if (v.size() == 0) {
       assert i == 0;
-      assertEquals(0, array.length);
+      Assert.assertEquals(0, array.length);
     } else {
       int n = (v.size() + 7) >>> 3;
-      assertEquals(n, array.length);
+      Assert.assertEquals(n, array.length);
       byte[] expected = Longs.toByteArray(i);
       for (int j = 0; j < expected.length - n; ++j) {
         assert expected[j] == 0;
@@ -1184,7 +1254,8 @@ public class BitVectorTest extends TestCase {
     }
   }
  
-  public void testCopyFromLongArray() {
+  @Test
+  public void copyFromLongArray() {
     checkCopyFromLongArray(BitVectorFactories.SLOW);
     checkCopyFromLongArray(BitVectorFactories.OPTIMAL);
     checkCopyFromLongArray(BitVectorFactories.LONG_ARRAY);
@@ -1198,7 +1269,7 @@ public class BitVectorTest extends TestCase {
       for (long j = Long.MIN_VALUE; ++j <= Long.MIN_VALUE + 80; ) {
         longArray[1] = j;
         v.copyFrom(longArray);
-        MoreAsserts.assertEquals(longArray, v.toLongArray());
+        Assert.assertArrayEquals(longArray, v.toLongArray());
       }
     }
   }
@@ -1211,23 +1282,23 @@ public class BitVectorTest extends TestCase {
 
   private static void checkIncrementReturnValue(Function<Integer, BitVector> factory) {
     BitVector b = factory.apply(0);
-    assertFalse(b.increment());
+    Assert.assertFalse(b.increment());
     b = factory.apply(4);
     b.copyFrom(0xD);
-    assertTrue(b.increment());
-    assertTrue(b.increment());
-    assertFalse(b.increment());
-    assertFalse(b.increment());
+    Assert.assertTrue(b.increment());
+    Assert.assertTrue(b.increment());
+    Assert.assertFalse(b.increment());
+    Assert.assertFalse(b.increment());
     b = factory.apply(64);
     b.copyFrom(0xFFFFFFFFFFFFFFFEL);
-    assertTrue(b.increment());
-    assertFalse(b.increment());
-    assertFalse(b.increment());
+    Assert.assertTrue(b.increment());
+    Assert.assertFalse(b.increment());
+    Assert.assertFalse(b.increment());
     b = factory.apply(128);
     b.copyFrom(new long[] {-3L, -1L});
-    assertTrue(b.increment());
-    assertTrue(b.increment());
-    assertFalse(b.increment());
-    assertEquals(-1L, b.toLong());
+    Assert.assertTrue(b.increment());
+    Assert.assertTrue(b.increment());
+    Assert.assertFalse(b.increment());
+    Assert.assertEquals(-1L, b.toLong());
   }
 }

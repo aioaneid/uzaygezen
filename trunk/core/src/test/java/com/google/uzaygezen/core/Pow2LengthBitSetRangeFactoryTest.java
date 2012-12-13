@@ -16,27 +16,30 @@
 
 package com.google.uzaygezen.core;
 
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
-
-import java.util.Map;
 
 /**
  * TODO: Create an exhaustive space search test.
  * 
  * @author Daniel Aioanei
  */
-public class Pow2LengthBitSetRangeFactoryTest extends TestCase {
+public class Pow2LengthBitSetRangeFactoryTest {
 
-  public void testNoDimensions() {
+  @Test
+  public void noDimensions() {
     Pow2LengthBitSetRangeFactory<String> range =
         Pow2LengthBitSetRangeFactory.create(ImmutableList.<Integer>of());
     checkSingleElement(range, 0);
   }
 
-  public void testOneDimensionAndRootNodeOnly() {
+  @Test
+  public void oneDimensionAndRootNodeOnly() {
     for (int i = 0; i < 5; ++i) {
       Pow2LengthBitSetRangeFactory<String> range =
           Pow2LengthBitSetRangeFactory.create(ImmutableList.<Integer>of(i));
@@ -44,15 +47,17 @@ public class Pow2LengthBitSetRangeFactoryTest extends TestCase {
     }
   }
 
-  public void testEmptyMapProducedFromNull() {
+  @Test
+  public void emptyMapProducedFromNull() {
     for (int i = 0; i < 5; ++i) {
       Pow2LengthBitSetRangeFactory<String> range =
           Pow2LengthBitSetRangeFactory.create(ImmutableList.<Integer>of(i));
-      assertTrue(range.apply(null).isEmpty());
+      Assert.assertTrue(range.apply(null).isEmpty());
     }
   }
 
-  public void testOneDimensionWithTwoNodes() {
+  @Test
+  public void oneDimensionWithTwoNodes() {
     for (int bitCount = 1; bitCount < 5; ++bitCount) {
       Pow2LengthBitSetRangeFactory<String> range =
           Pow2LengthBitSetRangeFactory.create(ImmutableList.<Integer>of(bitCount));
@@ -67,12 +72,13 @@ public class Pow2LengthBitSetRangeFactoryTest extends TestCase {
             new Pow2LengthBitSetRange(leftLink, 0), NodeValue.of("b", true));
         Map<Pow2LengthBitSetRange, NodeValue<String>> actual = range.apply(MapNode.create(
             "a", ImmutableMap.<BitVector, MapNode<BitVector, String>>of(leftLink, leftChild)));
-        assertEquals(expected, actual);
+        Assert.assertEquals(expected, actual);
       }
     }
   }
 
-  public void testOneDimensionWithThreeNodes() {
+  @Test
+  public void oneDimensionWithThreeNodes() {
     for (int bitCount = 1; bitCount < 5; ++bitCount) {
       Pow2LengthBitSetRangeFactory<String> range =
           Pow2LengthBitSetRangeFactory.create(ImmutableList.<Integer>of(bitCount));
@@ -99,14 +105,15 @@ public class Pow2LengthBitSetRangeFactoryTest extends TestCase {
                 "a", ImmutableMap.<BitVector, MapNode<BitVector, String>>of(
                     leftLink, leftChild, rightLink, rightChild));
             Map<Pow2LengthBitSetRange, NodeValue<String>> actual = range.apply(root);
-            assertEquals(expected, actual);
+            Assert.assertEquals(expected, actual);
           }
         }
       }
     }
   }
   
-  public void testTwoDimensionsWithFourNodes() {
+  @Test
+  public void twoDimensionsWithFourNodes() {
     Pow2LengthBitSetRangeFactory<String> range =
         Pow2LengthBitSetRangeFactory.create(ImmutableList.<Integer>of(3, 1));
     MapNode<BitVector, String> leftChild =
@@ -135,7 +142,7 @@ public class Pow2LengthBitSetRangeFactoryTest extends TestCase {
         new Pow2LengthBitSetRange(expectedForC, 3), NodeValue.of("c", false),
         new Pow2LengthBitSetRange(grandchildBitSet, 0), NodeValue.of("d", true));
     Map<Pow2LengthBitSetRange, NodeValue<String>> actual = range.apply(root);
-    assertEquals(expected, actual);
+    Assert.assertEquals(expected, actual);
   }
 
   private void checkSingleElement(Pow2LengthBitSetRangeFactory<String> range, int level) {
@@ -144,6 +151,6 @@ public class Pow2LengthBitSetRangeFactoryTest extends TestCase {
     Map<Pow2LengthBitSetRange, NodeValue<String>> expected = ImmutableMap.of(
         new Pow2LengthBitSetRange(BitVectorFactories.OPTIMAL.apply(level), level),
         NodeValue.of("x", true));
-    assertEquals(expected, actual);
+    Assert.assertEquals(expected, actual);
   }
 }

@@ -27,4 +27,4 @@ import com.google.common.base.Supplier;
  *
  * @param <T> filter type
  */
-public interface QueryFactory<T> extends Supplier<Query<T>> {}
+public interface QueryFactory<F, R> extends Supplier<Query<F,R>> {}

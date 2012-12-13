@@ -16,62 +16,75 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.util.logging.Level;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.ranges.LongRange;
+import com.google.uzaygezen.core.ranges.LongRangeHome;
 
 /**
  * @author Daniel Aioanei
  */
-public class RangeListFilterTest extends TestCase {
+public class RangeListFilterTest {
 
-  public void testCombineThresholdNotExceeded() {
-    RangeListFilter x =
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE);
-    RangeListFilter y =
-        new RangeListFilter(ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE);
-    RangeListFilter z = x.combine(y, 2, 10);
-    assertEquals(new RangeListFilter(
-        ImmutableList.of(TestUtils.ZERO_ONE, TestUtils.THREE_FOUR), false, Level.FINE), z);
+  @Test
+  public void combineThresholdNotExceeded() {
+    RangeListFilter<Long, LongContent, LongRange> x = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> y = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> z = x.combine(y, 2, new LongContent(10));
+    Assert.assertEquals(new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_ONE, TestUtils.THREE_FOUR), false, Level.FINE,
+      LongRangeHome.INSTANCE), z);
   }
 
-  public void testCombineThresholdStaysExceededIfFirstExceeded() {
-    RangeListFilter x = new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), true, Level.FINE);
-    RangeListFilter y =
-        new RangeListFilter(ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE);
-    RangeListFilter z = x.combine(y, 2, 10);
-    assertEquals(new RangeListFilter(ImmutableList.of(TestUtils.ZERO_FOUR), true, Level.FINE), z);
+  @Test
+  public void combineThresholdStaysExceededIfFirstExceeded() {
+    RangeListFilter<Long, LongContent, LongRange> x = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_ONE), true, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> y = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> z = x.combine(y, 2, new LongContent(10));
+    Assert.assertEquals(new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_FOUR), true, Level.FINE, LongRangeHome.INSTANCE), z);
   }
 
-  public void testCombineThresholdStaysExceededIfSecondExceeded() {
-    RangeListFilter x =
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE);
-    RangeListFilter y =
-      new RangeListFilter(ImmutableList.of(TestUtils.THREE_FOUR), true, Level.FINE);
-    RangeListFilter z = x.combine(y, 2, 10);
-    assertEquals(new RangeListFilter(ImmutableList.of(TestUtils.ZERO_FOUR), true, Level.FINE), z);
+  @Test
+  public void combineThresholdStaysExceededIfSecondExceeded() {
+    RangeListFilter<Long, LongContent, LongRange> x = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> y = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.THREE_FOUR), true, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> z = x.combine(y, 2, new LongContent(10));
+    Assert.assertEquals(new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_FOUR), true, Level.FINE, LongRangeHome.INSTANCE), z);
   }
 
-  public void testCombineThresholdExceeded() {
-    RangeListFilter x =
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE);
-    RangeListFilter y =
-        new RangeListFilter(ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE);
-    RangeListFilter z = x.combine(y, 1, 10);
-    assertEquals(new RangeListFilter(ImmutableList.of(TestUtils.ZERO_FOUR), true, Level.FINE), z);
+  @Test
+  public void combineThresholdExceeded() {
+    RangeListFilter<Long, LongContent, LongRange> x = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> y = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> z = x.combine(y, 1, new LongContent(10));
+    Assert.assertEquals(new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_FOUR), true, Level.FINE, LongRangeHome.INSTANCE), z);
   }
 
-  public void testCombineCollapsesVacuum() {
-    RangeListFilter x =
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE);
-    RangeListFilter y =
-        new RangeListFilter(ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE);
+  @Test
+  public void combineCollapsesVacuum() {
+    RangeListFilter<Long, LongContent, LongRange> x = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE);
+    RangeListFilter<Long, LongContent, LongRange> y = new RangeListFilter<>(
+      ImmutableList.of(TestUtils.THREE_FOUR), false, Level.FINE, LongRangeHome.INSTANCE);
     for (int i = 1; i < 3; ++i) {
-      RangeListFilter z = x.combine(y, i, 0);
-      assertEquals(
-          new RangeListFilter(ImmutableList.of(TestUtils.ZERO_FOUR), false, Level.FINE), z);
+      RangeListFilter<Long, LongContent, LongRange> z = x.combine(y, i, new LongContent(0));
+      Assert.assertEquals(new RangeListFilter<>(
+        ImmutableList.of(TestUtils.ZERO_FOUR), false, Level.FINE, LongRangeHome.INSTANCE), z);
     }
   }
 }

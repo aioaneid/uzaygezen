@@ -16,25 +16,25 @@
 
 package com.google.uzaygezen.core;
 
-
-
-import junit.framework.TestCase;
-
 import java.util.BitSet;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public class BitSetComparatorTest extends TestCase {
+public class BitSetComparatorTest {
   
-  public void testOrderIsSameAsNormalNumberOrdering() {
+  @Test
+  public void orderIsSameAsNormalNumberOrdering() {
     BitSet iAsBitSet = new BitSet();
     BitSet jAsBitSet = new BitSet();
     for (int i = 0; i < 64; ++i) {
       jAsBitSet.clear();
       for (int j = 0; j < 64; ++j) {
         int cmp = BitSetComparator.INSTANCE.compare(iAsBitSet, jAsBitSet);
-        assertEquals(Math.signum(i - j), Math.signum(cmp));
+        Assert.assertEquals(Integer.signum(i - j), Integer.signum(cmp));
         BitSetMath.increment(jAsBitSet);
       }
       BitSetMath.increment(iAsBitSet);

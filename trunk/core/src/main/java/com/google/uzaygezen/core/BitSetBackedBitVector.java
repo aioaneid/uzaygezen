@@ -430,13 +430,6 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
     	assert array.length == n;
     }
     return array;
-//    int n = (size + 63) >>> 6;
-//    long[] array = new long[n];
-//    for (int i = bitset.nextSetBit(0); i >= 0; i = bitset.nextSetBit(i + 1)) {
-//      int arrayIndex = i >>> 6;
-//      array[arrayIndex] |= 1L << (i & 63);
-//    }
-//    return array;
   }
   
   @Override

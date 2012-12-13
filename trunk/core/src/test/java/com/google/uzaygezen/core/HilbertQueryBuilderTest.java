@@ -16,25 +16,29 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
-
-import junit.framework.TestCase;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.uzaygezen.core.ranges.LongRange;
+import com.google.uzaygezen.core.ranges.LongRangeHome;
+
 /**
- * Test case that puts together {@link CompactHilbertCurve}, {@link
- * SimpleRegionInspector}, {@link ListConcatCombiner} and {@link
- * BacktrackingQueryBuilder}.
+ * Test case that puts together {@link CompactHilbertCurve},
+ * {@link SimpleRegionInspector}, {@link ListConcatCombiner} and
+ * {@link BacktrackingQueryBuilder}.
  * 
  * @author Daniel Aioanei
  */
-public class HilbertQueryBuilderTest extends TestCase {
-  
-  public void testSinglePointQuery() {
+public class HilbertQueryBuilderTest {
+
+  @Test
+  public void singlePointQuery() {
     TestUtils.generateSpec(4, 5, new TestUtils.IntArrayCallback() {
       @Override
       public void call(int[] m) {
@@ -42,7 +46,7 @@ public class HilbertQueryBuilderTest extends TestCase {
       }
     });
   }
-  
+
   private static void singlePointQuery(int[] m) {
     CompactHilbertCurve chc = new CompactHilbertCurve(m);
     final int n = m.length;
@@ -67,49 +71,57 @@ public class HilbertQueryBuilderTest extends TestCase {
         queryPoint.add(LongRange.of(val, val + 1));
         k += m[j];
       }
-      RegionInspector<RangeListFilter> regionInspector = SimpleRegionInspector.create(
-          ImmutableList.of(queryPoint), 1, RangeListFilter.creator(Level.FINE));
-      QueryBuilder<RangeListFilter> queryBuilder = BacktrackingQueryBuilder.create(
-          regionInspector, ListConcatCombiner.UNBOUNDED_INSTANCE, 1, true);
+      RegionInspector<RangeListFilter<Long, LongContent, LongRange>, LongContent> regionInspector = SimpleRegionInspector.create(
+        ImmutableList.of(queryPoint), TestUtils.ONE_LONG_CONTENT,
+        RangeListFilter.creator(Level.FINE, LongRangeHome.INSTANCE), LongRangeHome.INSTANCE,
+        TestUtils.ZERO_LONG_CONTENT);
+      FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
+      QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = BacktrackingQueryBuilder.create(
+        regionInspector, combiner, 1, true, LongRangeHome.INSTANCE, TestUtils.ZERO_LONG_CONTENT);
       chc.accept(new ZoomingSpaceVisitorAdapter(chc, queryBuilder));
-      Query<RangeListFilter> actual = queryBuilder.get();
+      Query<RangeListFilter<Long, LongContent, LongRange>, LongRange> actual = queryBuilder.get();
       chc.index(p, 0, chi);
       long pointCompactHilbertIndex = chi.toExactLong();
-      LongRange expectedSingleRange =
-          LongRange.of(pointCompactHilbertIndex, pointCompactHilbertIndex + 1);
-      FilteredIndexRange<RangeListFilter> expectedIndexQueryRange =
-          FilteredIndexRange.<RangeListFilter>of(expectedSingleRange,
-              new RangeListFilter(ImmutableList.of(expectedSingleRange), false, Level.FINE), false);
-      Query<RangeListFilter> expected = Query.of(
-          ImmutableList.<FilteredIndexRange<RangeListFilter>>of(expectedIndexQueryRange));
-      assertEquals(expected, actual);
-      assertFalse(expected.isPotentialOverSelectivity());
+      LongRange expectedSingleRange = LongRange.of(
+        pointCompactHilbertIndex, pointCompactHilbertIndex + 1);
+      FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> expectedIndexQueryRange = FilteredIndexRange.of(
+        expectedSingleRange,
+        new RangeListFilter<Long, LongContent, LongRange>(
+          ImmutableList.of(expectedSingleRange), false, Level.FINE, LongRangeHome.INSTANCE), false);
+      Query<RangeListFilter<Long, LongContent, LongRange>, LongRange> expected = Query.of(ImmutableList.of(expectedIndexQueryRange));
+      Assert.assertEquals(expected, actual);
+      Assert.assertFalse(expected.isPotentialOverSelectivity());
     }
   }
 
-  public void testOrder2Query() {
-    RegionInspector<RangeListFilter> regionInspector = SimpleRegionInspector.create(
-        ImmutableList.of(ImmutableList.<LongRange>of(TestUtils.TWO_SIX, TestUtils.TWO_FOUR)),
-        1, RangeListFilter.creator(Level.FINE));
+  @Test
+  public void order2Query() {
+    RegionInspector<RangeListFilter<Long, LongContent, LongRange>, LongContent> regionInspector = SimpleRegionInspector.create(
+      ImmutableList.of(ImmutableList.<LongRange>of(TestUtils.TWO_SIX, TestUtils.TWO_FOUR)),
+      TestUtils.ONE_LONG_CONTENT, RangeListFilter.creator(Level.FINE, LongRangeHome.INSTANCE),
+      LongRangeHome.INSTANCE, TestUtils.ZERO_LONG_CONTENT);
     CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {3, 3});
     LongRange expectedRange1 = LongRange.of(8, 12);
     LongRange expectedRange2 = LongRange.of(52, 56);
-    FilteredIndexRange<RangeListFilter> expectedIndexQueryRange1 = FilteredIndexRange.of(
-        expectedRange1, new RangeListFilter(ImmutableList.of(expectedRange1), false, Level.FINE),
-        false);
-    FilteredIndexRange<RangeListFilter> expectedIndexQueryRange2 = FilteredIndexRange.of(
-        expectedRange2, new RangeListFilter(ImmutableList.of(expectedRange2), false, Level.FINE),
-        false);
-    List<FilteredIndexRange<RangeListFilter>> expected = Lists.newArrayList();
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> expectedIndexQueryRange1 = FilteredIndexRange.of(
+      expectedRange1,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(expectedRange1), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> expectedIndexQueryRange2 = FilteredIndexRange.of(
+      expectedRange2,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(expectedRange2), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    List<FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange>> expected = new ArrayList<>();
     expected.add(expectedIndexQueryRange1);
     expected.add(expectedIndexQueryRange2);
+    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
     for (int i = 2; i < 5; ++i) {
-      QueryBuilder<RangeListFilter> queryBuilder = BacktrackingQueryBuilder.create(
-          regionInspector, ListConcatCombiner.UNBOUNDED_INSTANCE, i, true);
+      QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = BacktrackingQueryBuilder.create(
+        regionInspector, combiner, i, true, LongRangeHome.INSTANCE, TestUtils.ZERO_LONG_CONTENT);
       chc.accept(new ZoomingSpaceVisitorAdapter(chc, queryBuilder));
-      Query<RangeListFilter> actual = queryBuilder.get();
-      assertEquals(Query.of(expected), actual);
-      assertFalse(actual.isPotentialOverSelectivity());
+      Query<RangeListFilter<Long, LongContent, LongRange>, LongRange> actual = queryBuilder.get();
+      Assert.assertEquals(Query.of(expected), actual);
+      Assert.assertFalse(actual.isPotentialOverSelectivity());
     }
   }
 }

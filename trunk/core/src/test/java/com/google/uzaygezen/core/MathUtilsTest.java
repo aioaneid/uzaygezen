@@ -18,17 +18,19 @@ package com.google.uzaygezen.core;
 
 
 
-import junit.framework.TestCase;
-
 import java.math.BigInteger;
 import java.util.Random;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public class MathUtilsTest extends TestCase {
+public class MathUtilsTest {
   
-  public void testGcd() {
+  @Test
+  public void gcd() {
     for (int i = -64; i < 64; ++i) {
       for (int j = -64; j < 64; ++j) {
         checkGcd(0, i, j);
@@ -38,32 +40,35 @@ public class MathUtilsTest extends TestCase {
     }
   }
 
-  public void testToFixedSizeByteArray() {
+  @Test
+  public void toFixedSizeByteArray() {
     // Testing up to 5 bytes.
     for (int i = 0; i < 256 * 5 * 8; ++i) {
       for (int byteCount = (i + 7) / 8; byteCount < 9; ++byteCount) {
-        assertEquals(i, MathUtils.unsignedBigEndianBytesToNonNegativeLong(
+        Assert.assertEquals(i, MathUtils.unsignedBigEndianBytesToNonNegativeLong(
             MathUtils.nonNegativeLongToBigEndianBytes(byteCount, i)));
       }
     }
   }
 
-  public void testBitCountToByteCount() {
-    assertEquals(0, MathUtils.bitCountToByteCount(0));
-    assertEquals(1, MathUtils.bitCountToByteCount(1));
-    assertEquals(1, MathUtils.bitCountToByteCount(8));
-    assertEquals(2, MathUtils.bitCountToByteCount(9));
-    assertEquals(2, MathUtils.bitCountToByteCount(16));
-    assertEquals(3, MathUtils.bitCountToByteCount(17));
+  @Test
+  public void bitCountToByteCount() {
+    Assert.assertEquals(0, MathUtils.bitCountToByteCount(0));
+    Assert.assertEquals(1, MathUtils.bitCountToByteCount(1));
+    Assert.assertEquals(1, MathUtils.bitCountToByteCount(8));
+    Assert.assertEquals(2, MathUtils.bitCountToByteCount(9));
+    Assert.assertEquals(2, MathUtils.bitCountToByteCount(16));
+    Assert.assertEquals(3, MathUtils.bitCountToByteCount(17));
   }
 
-  public void testDoubleBytesConversion() {
+  @Test
+  public void doubleBytesConversion() {
     Random random = new Random(TestUtils.SEED);
     for (int i = 0; i < 10; ++i) {
       double x = random.nextDouble();
       byte[] xBytes = MathUtils.doubleToBytes(x);
       double actual = MathUtils.bytesToDouble(xBytes);
-      assertEquals(x, actual);
+      Assert.assertEquals(x, actual, 0);
     }
   }
   
@@ -71,6 +76,6 @@ public class MathUtilsTest extends TestCase {
     BigInteger iAsBigInt = BigInteger.valueOf(offset + i);
     BigInteger jAsBigInt = BigInteger.valueOf(offset + j);
     BigInteger gcd = iAsBigInt.gcd(jAsBigInt);
-    assertEquals(MathUtils.gcd(offset + i, offset + j), gcd.intValue());
+    Assert.assertEquals(MathUtils.gcd(offset + i, offset + j), gcd.intValue());
   }
 }

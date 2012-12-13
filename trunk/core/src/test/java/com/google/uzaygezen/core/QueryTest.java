@@ -16,30 +16,37 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.ranges.LongRange;
 
 /**
  * @author Daniel Aioanei
  */
-public class QueryTest extends TestCase {
+public class QueryTest {
 
-  public void testHashCode() {
-    MoreAsserts.checkEqualsAndHashCodeMethods(Query.emptyQuery(),
-        Query.of(ImmutableList.<FilteredIndexRange<Object>>of()), true);
-    MoreAsserts.checkEqualsAndHashCodeMethods(Query.emptyQuery(),
-        Query.of(ImmutableList.<FilteredIndexRange<Object>>of(new FilteredIndexRange<Object>(
-            LongRange.of(1, 2), new Object(), false))), false);
+  @Test
+  public void equalsAndHashCode() {
+    MoreAsserts.checkEqualsAndHashCodeMethods(
+      Query.emptyQuery(), Query.of(ImmutableList.<FilteredIndexRange<Object, LongRange>> of()),
+      true);
+    FilteredIndexRange<Object, LongRange> fir = new FilteredIndexRange<Object, LongRange>(
+      LongRange.of(1, 2), new Object(), false);
+    MoreAsserts.checkEqualsAndHashCodeMethods(
+      Query.emptyQuery(), Query.of(ImmutableList.<FilteredIndexRange<Object, LongRange>> of(fir)),
+      false);
   }
 
-  public void testProperties() {
-    List<FilteredIndexRange<Integer>> filteredIndexRanges = ImmutableList.of(
-        FilteredIndexRange.of(TestUtils.ONE_TEN, 5, true));
-    Query<Integer> query = Query.of(filteredIndexRanges);
-    assertEquals(filteredIndexRanges, query.getFilteredIndexRanges());
-    assertTrue(query.isPotentialOverSelectivity());
+  @Test
+  public void properties() {
+    FilteredIndexRange<Integer, LongRange> fir = FilteredIndexRange.of(TestUtils.ONE_TEN, 5, true);
+    List<FilteredIndexRange<Integer, LongRange>> filteredIndexRanges = ImmutableList.of(fir);
+    Query<Integer, LongRange> query = Query.of(filteredIndexRanges);
+    Assert.assertEquals(filteredIndexRanges, query.getFilteredIndexRanges());
+    Assert.assertTrue(query.isPotentialOverSelectivity());
   }
 }

@@ -28,11 +28,13 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.ranges.Content;
+import com.google.uzaygezen.core.ranges.Range;
+import com.google.uzaygezen.core.ranges.RangeHome;
 
 /**
- * Associates a list of ranges with a bool specifying if the list of ranges has
+ * Associates a list of ranges with a boolean specifying if the list of ranges has
  * exceeded the maximum limit. If at least one of two such filters has exceeded
  * the threshold in the past, then the combined threshold will have just one
  * element in the list.
@@ -51,36 +53,21 @@ import com.google.common.collect.ImmutableList;
  * 
  * @author Daniel Aioanei
  */
-public class RangeListFilter {
+public class RangeListFilter<T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> {
 
   private static final Logger logger = Logger.getLogger(RangeListFilter.class.getName());
   
-  private final List<LongRange> rangeList;
+  private final List<R> rangeList;
   private final boolean thresholdExceeded;
   private final Level thresholdExceededLogLevel;
+  private final RangeHome<T, V, R> rangeHome;
   
-  public static final Predicate<RangeListFilter> IS_THRESHOLD_EXCEEDED =
-      new Predicate<RangeListFilter>() {
+  public static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> Function<R, RangeListFilter<T, V, R>> creator(
+      final Level thresholdExceededLogLevel, final RangeHome<T, V, R> rangeHome) {
+      return new Function<R, RangeListFilter<T, V, R>>() {
         @Override
-        public boolean apply(RangeListFilter from) {
-          return from.thresholdExceeded;
-        }
-  };
-  
-  public static final Function<RangeListFilter, List<LongRange>> RANGE_LIST_EXTRACTOR =
-      new Function<RangeListFilter, List<LongRange>>() {
-        @Override
-        public List<LongRange> apply(RangeListFilter from) {
-          return from.getRangeList();
-        }
-  };
-  
-  public static Function<LongRange, RangeListFilter> creator(
-      final Level thresholdExceededLogLevel) {
-      return new Function<LongRange, RangeListFilter>() {
-        @Override
-        public RangeListFilter apply(LongRange from) {
-          return new RangeListFilter(ImmutableList.of(from), false, thresholdExceededLogLevel);
+        public RangeListFilter<T, V, R> apply(R from) {
+          return new RangeListFilter<>(ImmutableList.of(from), false, thresholdExceededLogLevel, rangeHome);
         }
       };
   }
@@ -89,8 +76,8 @@ public class RangeListFilter {
    * @param rangeList should better be an immutable list
    * @param thresholdExceeded if the filter size threshold has been exceeded
    */
-  public RangeListFilter(List<LongRange> rangeList, boolean thresholdExceeded,
-      Level thresholdExceededLogLevel) {
+  public RangeListFilter(List<R> rangeList, boolean thresholdExceeded,
+      Level thresholdExceededLogLevel, RangeHome<T, V, R> rangeHome) {
     Preconditions.checkArgument(!rangeList.isEmpty(), "rangeList must not be empty");
     Preconditions.checkArgument(!thresholdExceeded || rangeList.size() == 1,
         "A list which has exceede the threshold will always have exactly one element");
@@ -98,16 +85,17 @@ public class RangeListFilter {
     this.thresholdExceeded = thresholdExceeded;
     this.thresholdExceededLogLevel =
         Preconditions.checkNotNull(thresholdExceededLogLevel, "thresholdExceededLogLevel");
+    this.rangeHome = rangeHome;
   }
 
-  public RangeListFilter combine(RangeListFilter higher, int threshold, long gapEstimate) {
+  public RangeListFilter<T, V, R> combine(RangeListFilter<T, V, R> higher, int threshold, V gapEstimate) {
     Preconditions.checkArgument(rangeList.size() <= threshold);
     Preconditions.checkArgument(higher.rangeList.size() <= threshold);
     // This trick works for nonnegative numbers.
-    int cmp = Long.signum(rangeList.get(rangeList.size() - 1).getEnd()
-        - Long.valueOf(higher.rangeList.get(0).getStart()));
-    int gapSignum = Long.signum(gapEstimate);
-    Preconditions.checkArgument((cmp == -1 && gapSignum >= 0) || (cmp == 0 && gapSignum == 0));
+    int cmp = rangeList.get(rangeList.size() - 1).getEnd().compareTo(
+      higher.rangeList.get(0).getStart());
+    int gapSignum = gapEstimate.isZero() ? 0 : 1;
+    Preconditions.checkArgument((cmp < 0 & gapSignum >= 0) || (cmp == 0 & gapSignum == 0));
     int concatenatedListSize = rangeList.size() + higher.rangeList.size() + gapSignum - 1;
     if (thresholdExceeded || higher.thresholdExceeded || concatenatedListSize > threshold) {
       if (concatenatedListSize > threshold & !thresholdExceeded & !higher.thresholdExceeded) {
@@ -115,24 +103,24 @@ public class RangeListFilter {
             + " {1} and {2} and gapEstimate={3}.", new Object[] {
                 threshold, rangeList.size(), higher.rangeList.size(), gapEstimate});
       }
-      return new RangeListFilter(ImmutableList.of(LongRange.of(rangeList.get(0).getStart(),
+      return new RangeListFilter<T, V, R>(ImmutableList.of(rangeHome.of(rangeList.get(0).getStart(),
           higher.rangeList.get(higher.rangeList.size() - 1).getEnd())), true,
-          thresholdExceededLogLevel);
+          thresholdExceededLogLevel, rangeHome);
     }
-    List<LongRange> list = new ArrayList<LongRange>(concatenatedListSize);
+    List<R> list = new ArrayList<>(concatenatedListSize);
     if (gapSignum == 0) {
       list.addAll(rangeList);
       list.addAll(list.size() - 1, higher.rangeList);
-      LongRange lastLowerFilter = list.remove(list.size() - 1);
+      R lastLowerFilter = list.remove(list.size() - 1);
       assert rangeList.get(rangeList.size() - 1) == lastLowerFilter;
       list.set(rangeList.size() - 1,
-          LongRange.of(lastLowerFilter.getStart(), higher.rangeList.get(0).getEnd()));
+          rangeHome.of(lastLowerFilter.getStart(), higher.rangeList.get(0).getEnd()));
     } else {
       list.addAll(rangeList);
       list.addAll(higher.rangeList);
     }
-    return new RangeListFilter(
-        Collections.unmodifiableList(list), false, thresholdExceededLogLevel);
+    return new RangeListFilter<T, V, R>(
+        Collections.unmodifiableList(list), false, thresholdExceededLogLevel, rangeHome);
   }
   
   @Override
@@ -145,7 +133,7 @@ public class RangeListFilter {
     if (!(o instanceof RangeListFilter)) {
       return false;
     }
-    RangeListFilter other = (RangeListFilter) o;
+    RangeListFilter<?, ?, ?> other = (RangeListFilter<?, ?, ?>) o;
     return rangeList.equals(other.rangeList) && thresholdExceeded == other.thresholdExceeded;
   }
   
@@ -154,15 +142,15 @@ public class RangeListFilter {
     return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 
-  public List<LongRange> getRangeList() {
+  public List<R> getRangeList() {
     return rangeList;
   }
 
   /**
    * Convenience method to extract the range covered by this filter.
    */
-  public LongRange getRange() {
-    return LongRange.of(
+  public R getRange() {
+    return rangeHome.of(
         rangeList.get(0).getStart(), rangeList.get(rangeList.size() - 1).getEnd());
   }
   

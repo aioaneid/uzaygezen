@@ -20,42 +20,16 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import com.google.common.collect.ImmutableMultiset;
 
 /**
  * Contains additional assertion methods not found in JUnit.
  */
-final class MoreAsserts {
+public final class MoreAsserts {
 
   private MoreAsserts() { }
-
-  /**
-   * Asserts that array {@code actual} is the same size and every element equals
-   * those in array {@code expected}. On failure, message indicates first
-   * specific element mismatch.
-   */
-  public static void assertEquals(
-      String message, long[] expected, long[] actual) {
-    if (expected.length != actual.length) {
-      failWrongLength(message, expected.length, actual.length);
-    }
-    for (int i = 0; i < expected.length; i++) {
-      if (expected[i] != actual[i]) {
-        failWrongElement(message, i, expected[i], actual[i]);
-      }
-    }
-  }
-
-  /**
-   * Asserts that array {@code actual} is the same size and every element equals
-   * those in array {@code expected}. On failure, message indicates first
-   * specific element mismatch.
-   */
-  public static void assertEquals(long[] expected, long[] actual) {
-    assertEquals(null, expected, actual);
-  }
 
   /**
    * Asserts that {@code expectedRegex} matches any substring of {@code actual}
@@ -186,18 +160,6 @@ final class MoreAsserts {
   private static Matcher getMatcher(String expectedRegex, String actual) {
     Pattern pattern = Pattern.compile(expectedRegex);
     return pattern.matcher(actual);
-  }
-
-  private static void failWrongLength(
-      String message, int expected, int actual) {
-    failWithMessage(message, "expected array length:<" + expected
-        + "> but was:<" + actual + '>');
-  }
-
-  private static void failWrongElement(
-      String message, int index, Object expected, Object actual) {
-    failWithMessage(message, "expected array element[" + index + "]:<"
-        + expected + "> but was:<" + actual + '>');
   }
 
   private static void failNotContains(

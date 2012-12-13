@@ -88,7 +88,7 @@ public class LongArrayBitVector implements BitVector {
 
   /* Should always return true. */
   private boolean checkSanity() {
-    return size % WORD == 0 || (data[data.length - 1] & (-1L << size)) == 0L;
+    return (size & (WORD - 1)) == 0 || (data[data.length - 1] & (-1L << size)) == 0L;
   }
 
   @Override
@@ -120,17 +120,21 @@ public class LongArrayBitVector implements BitVector {
   @Override
   public void set(int fromIndex, int toIndex) {
     checkRange(0, size, fromIndex, toIndex);
-    if (size == 0) {
-      return;
-    }
     int fromBucket = fromIndex / WORD;
     int toBucket = toIndex / WORD;
     if (fromBucket == toBucket) {
-      data[fromBucket] |= (1L << toIndex) - (1L << fromIndex);
+      if (fromBucket != data.length) {
+        data[fromBucket] |= (1L << toIndex) - (1L << fromIndex);
+      } else {
+        assert fromIndex == toIndex;
+        assert toIndex == size;
+      }
     } else {
       data[fromBucket] |= -(1L << fromIndex);
-      if (toBucket < data.length) {
+      if (toBucket != data.length) {
         data[toBucket] |= (1L << toIndex) - 1L;
+      } else {
+        assert toIndex == size;
       }
       Arrays.fill(data, fromBucket + 1, toBucket, -1L);
     }
@@ -154,7 +158,7 @@ public class LongArrayBitVector implements BitVector {
 
   @Override
   public void copyFromSection(BitVector src, int fromIndex) {
-    checkRange(0, size - src.size(), fromIndex);
+    checkRange(0, src.size() - size, fromIndex);
     clear();
     copyFromSection(toPotentiallySharedLongArray(src), fromIndex);
     assert checkSanity();
@@ -218,17 +222,22 @@ public class LongArrayBitVector implements BitVector {
   @Override
   public void clear(int fromIndex, int toIndex) {
     checkRange(0, size, fromIndex, toIndex);
-    if (size == 0) {
-      return;
-    }
     int fromBucket = fromIndex / WORD;
     int toBucket = toIndex / WORD;
     if (fromBucket == toBucket) {
-      data[fromBucket] &= ~((1L << toIndex) - (1L << fromIndex));
+      if (fromBucket != data.length) {
+        data[fromBucket] &= ~((1L << toIndex) - (1L << fromIndex));
+      } else {
+        assert fromIndex == toIndex;
+        assert toIndex == size;
+      }
     } else {
+      assert fromIndex != size;
       data[fromBucket] &= ~-(1L << fromIndex);
-      if (toBucket < data.length) {
+      if (toBucket != data.length) {
         data[toBucket] &= ~((1L << toIndex) - 1L);
+      } else {
+        assert toIndex == size;
       }
       Arrays.fill(data, fromBucket + 1, toBucket, 0L);
     }
@@ -254,17 +263,21 @@ public class LongArrayBitVector implements BitVector {
   @Override
   public void flip(int fromIndex, int toIndex) {
     checkRange(0, size, fromIndex, toIndex);
-    if (size == 0) {
-      return;
-    }
     int fromBucket = fromIndex / WORD;
     int toBucket = toIndex / WORD;
     if (fromBucket == toBucket) {
-      data[fromBucket] ^= (1L << toIndex) - (1L << fromIndex);
+      if (fromBucket != data.length) {
+        data[fromBucket] ^= (1L << toIndex) - (1L << fromIndex);
+      } else {
+        assert fromIndex == toIndex;
+        assert toIndex == size;
+      }
     } else {
       data[fromBucket] ^= -(1L << fromIndex);
-      if (toBucket < data.length) {
+      if (toBucket != data.length) {
         data[toBucket] ^= (1L << toIndex) - 1L;
+      } else {
+        assert toIndex == size;
       }
       for (++fromBucket; fromBucket < toBucket; ++fromBucket) {
         data[fromBucket] ^= -1L;
@@ -730,21 +743,21 @@ public class LongArrayBitVector implements BitVector {
 
   private static void copy(
       long[] source,
-      int fromIndex,
+      int srcIndex,
       long[] destination,
-      int toIndex,
+      int destIndex,
       int length) {
     while (length > 0) {
       int toCopy = length;
-      toCopy = Math.min(toCopy, left(fromIndex));
-      toCopy = Math.min(toCopy, left(toIndex));
-      int fromBucket = fromIndex / WORD;
-      int toBucket = toIndex / WORD;
-      long w = (mask(toCopy) << fromIndex) & source[fromBucket];
-      destination[toBucket] &= ~(mask(toCopy) << toIndex);
-      destination[toBucket] |= (w >>> fromIndex) << toIndex;
-      fromIndex += toCopy;
-      toIndex += toCopy;
+      toCopy = Math.min(toCopy, left(srcIndex));
+      toCopy = Math.min(toCopy, left(destIndex));
+      int fromBucket = srcIndex / WORD;
+      int toBucket = destIndex / WORD;
+      long w = (mask(toCopy) << srcIndex) & source[fromBucket];
+      destination[toBucket] &= ~(mask(toCopy) << destIndex);
+      destination[toBucket] |= (w >>> srcIndex) << destIndex;
+      srcIndex += toCopy;
+      destIndex += toCopy;
       length -= toCopy;
     }
   }

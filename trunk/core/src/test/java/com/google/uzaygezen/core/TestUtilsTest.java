@@ -16,31 +16,32 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
-
-
-import junit.framework.TestCase;
+import java.util.BitSet;
 
 import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.junit.Test;
 
-import java.util.BitSet;
+import com.google.uzaygezen.core.TestUtils.IntArrayCallback;
 
 /**
  * @author Daniel Aioanei
  */
-public class TestUtilsTest extends TestCase {
+public class TestUtilsTest {
 
-  public void testUnsignedIntToLittleEndianBitSet() {
+  @Test
+  public void unsignedIntToLittleEndianBitSet() {
     for (int i = -1024; i < 1024; ++i) {
       BitSet bs = TestUtils.unsignedIntToLittleEndianBitSet(i);
       for (int j = 0; j < 32; ++j) {
         boolean expected = ((i >>> j) & 0x1) != 0;
-        assertEquals(expected, bs.get(j));
+        Assert.assertEquals(expected, bs.get(j));
       }
     }
   }
 
-  public void testGenerate() {
+  @Test
+  public void generate() {
     IntArrayCallback mock = EasyMock.createMock(IntArrayCallback.class);
     final int maxSum = 10;
     mock.call(EasyMock.aryEq(new int[0]));
@@ -58,17 +59,18 @@ public class TestUtilsTest extends TestCase {
     EasyMock.verify(mock);
   }
   
-  public void testIntArrayComparator() {
-    assertEquals(0, TestUtils.IntArrayComparator.INSTANCE.compare(new int[0], new int[0]));
-    assertTrue(TestUtils.IntArrayComparator.INSTANCE.compare(new int[0], new int[1]) < 0);
-    assertTrue(TestUtils.IntArrayComparator.INSTANCE.compare(new int[1], new int[0]) > 0);
-    assertTrue(
+  @Test
+  public void intArrayComparator() {
+    Assert.assertEquals(0, TestUtils.IntArrayComparator.INSTANCE.compare(new int[0], new int[0]));
+    Assert.assertTrue(TestUtils.IntArrayComparator.INSTANCE.compare(new int[0], new int[1]) < 0);
+    Assert.assertTrue(TestUtils.IntArrayComparator.INSTANCE.compare(new int[1], new int[0]) > 0);
+    Assert.assertTrue(
         TestUtils.IntArrayComparator.INSTANCE.compare(new int[] {1, 2}, new int[] {2, 2}) < 0);
-    assertEquals(
+    Assert.assertEquals(
         0, TestUtils.IntArrayComparator.INSTANCE.compare(new int[] {2, 2}, new int[] {2, 2}));
-    assertTrue(
+    Assert.assertTrue(
         TestUtils.IntArrayComparator.INSTANCE.compare(new int[] {1}, new int[] {1, 2}) < 0);
-    assertTrue(
+    Assert.assertTrue(
         TestUtils.IntArrayComparator.INSTANCE.compare(new int[] {1, 2}, new int[] {1}) > 0);
   }
 }

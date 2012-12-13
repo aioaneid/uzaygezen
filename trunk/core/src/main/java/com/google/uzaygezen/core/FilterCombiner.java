@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+
 /**
  * Combiner of two space filling curve index ranges with attached filters.
  * Because the number of index ranges that a query expression must have is
@@ -39,7 +40,7 @@ package com.google.uzaygezen.core;
  *
  * @param <T> filter type
  */
-public interface FilterCombiner<T> {
+public interface FilterCombiner<F, V, R> {
   
   /**
    * Combines two filtered index ranges and produces a combined filter that must
@@ -71,6 +72,6 @@ public interface FilterCombiner<T> {
    * selectivity might result by replacing the two filtered ranges with one
    * range with the combined filter attached
    */
-  SelectiveFilter<T> combine(FilteredIndexRange<T> firstFilteredRange,
-      FilteredIndexRange<T> secondFilteredRange, long gapEstimate);
+  SelectiveFilter<F> combine(FilteredIndexRange<F, R> firstFilteredRange,
+      FilteredIndexRange<F, R> secondFilteredRange, V gapEstimate);
 }

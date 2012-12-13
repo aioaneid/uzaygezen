@@ -16,14 +16,16 @@
 
 package com.google.uzaygezen.core;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public class BitVectorMathTest extends TestCase {
+public class BitVectorMathTest {
   
-  public void testSplit() {
+  @Test
+  public void split() {
     final int n = 5;
     BitVector[] actual = new BitVector[3];
     for (int i = 0; i < n; ++i) {
@@ -35,10 +37,10 @@ public class BitVectorMathTest extends TestCase {
           for (int x = 1; x < 1 << (i + j + k); ++x) {
             BitVector xAsBitVector = TestUtils.createBitVector(x, i + j + k);
             BitVectorMath.split(xAsBitVector, actual);
-            assertEquals(TestUtils.createBitVector(x >> (j + k), i), actual[0]);
-            assertEquals(TestUtils.createBitVector(
+            Assert.assertEquals(TestUtils.createBitVector(x >> (j + k), i), actual[0]);
+            Assert.assertEquals(TestUtils.createBitVector(
                 (x & ((1 << (j + k)) - (1 << k))) >>> k, j), actual[1]);
-            assertEquals(TestUtils.createBitVector(x & ((1 << k) - 1), k), actual[2]);
+            Assert.assertEquals(TestUtils.createBitVector(x & ((1 << k) - 1), k), actual[2]);
           }
         }
       }

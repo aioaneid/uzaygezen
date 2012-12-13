@@ -31,8 +31,6 @@ import java.util.BitSet;
  * @author Daniel Aioanei
  */
 public interface BitVector extends Comparable<BitVector> {
-  // TODO: For methods that take [from, to) also allow from=to=size
-  // to represent the empty sub-sequence as in most APIs that deal with sequences.
   
   boolean isEmpty();
   
