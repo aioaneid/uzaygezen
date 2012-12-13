@@ -16,31 +16,33 @@
 
 package com.google.uzaygezen.core;
 
-
-
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public class AssessmentTest extends TestCase {
+public class AssessmentTest {
 
-  public void testMakeDisjoint() {
-    Assessment<Integer> assessment = Assessment.makeDisjoint(10);
-    assertEquals(10, assessment.getEstimate());
-    assertSame(SpatialRelation.DISJOINT, assessment.getOutcome());
+  @Test
+  public void makeDisjoint() {
+    Assessment<Void, Integer> assessment = Assessment.makeDisjoint(10);
+    Assert.assertEquals(10, assessment.getEstimate().intValue());
+    Assert.assertSame(SpatialRelation.DISJOINT, assessment.getOutcome());
   }
 
-  public void testMakeOverlaps() {
-    Assessment<Integer> assessment = Assessment.makeOverlaps();
-    assertSame(SpatialRelation.OVERLAPS, assessment.getOutcome());
+  @Test
+  public void makeOverlaps() {
+    Assessment<Void, Integer> assessment = Assessment.makeOverlaps(0);
+    Assert.assertSame(SpatialRelation.OVERLAPS, assessment.getOutcome());
   }
 
-  public void testMakeCovered() {
-    final Integer ten = new Integer(10);
-    Assessment<Integer> assessment = Assessment.makeCovered(ten, true);
-    assertSame(SpatialRelation.COVERED, assessment.getOutcome());
-    assertSame(ten, assessment.getFilter());
-    assertTrue(assessment.isPotentialOverSelectivity());
+  @Test
+  public void makeCovered() {
+    Integer ten = new Integer(10);
+    Assessment<Integer, Integer> assessment = Assessment.makeCovered(ten, true, 0);
+    Assert.assertSame(SpatialRelation.COVERED, assessment.getOutcome());
+    Assert.assertSame(ten, assessment.getFilter());
+    Assert.assertTrue(assessment.isPotentialOverSelectivity());
   }
 }

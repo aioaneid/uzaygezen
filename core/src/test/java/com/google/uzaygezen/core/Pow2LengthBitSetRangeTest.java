@@ -16,16 +16,18 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-
-import junit.framework.TestCase;
-
 import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.ranges.LongRangeHome;
 
 /**
  * @author Daniel Aioanei
  */
-public class Pow2LengthBitSetRangeTest extends TestCase {
+public class Pow2LengthBitSetRangeTest {
 
   private static final Pow2LengthBitSetRange ZERO_ONE =
       new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 2), 0);
@@ -37,18 +39,13 @@ public class Pow2LengthBitSetRangeTest extends TestCase {
   private static final List<Pow2LengthBitSetRange> ZERO_ONE_ONE_TWO_TWO_FOUR =
       ImmutableList.of(ZERO_ONE, ONE_TWO, TWO_FOUR);
 
-  public void testContent() {
-    assertEquals(2, Pow2LengthBitSetRange.content(ZERO_ONE_ONE_TWO_TWO_FOUR));
-  }
-
-  public void testToBigIntOrthotope() {
-    assertEquals(ImmutableList.of(TestUtils.TWO_FOUR, TestUtils.FOUR_EIGHT),
-        Pow2LengthBitSetRange.toLongOrthotope(ImmutableList.of(
-            new Pow2LengthBitSetRange(TestUtils.createBitVector(2, 3), 1),
-            new Pow2LengthBitSetRange(TestUtils.createBitVector(4, 3), 2))));
+  @Test
+  public void levelSum() {
+    Assert.assertEquals(1, Pow2LengthBitSetRange.levelSum(ZERO_ONE_ONE_TWO_TWO_FOUR));
   }
   
-  public void testEncloses() {
+  @Test
+  public void encloses() {
     final int n = 20;
     for (int i = 0; i < n; ++i) {
       for (int iLevel = 0; iLevel < n; ++iLevel) {
@@ -58,13 +55,13 @@ public class Pow2LengthBitSetRangeTest extends TestCase {
           for (int jLevel = 0; jLevel < n; ++jLevel) {
             BitVector jShifted = TestUtils.createBitVector(j << jLevel, n + 32);
             Pow2LengthBitSetRange jRange = new Pow2LengthBitSetRange(jShifted.clone(), jLevel);
-            boolean expected = iRange.toLongRange().getStart() <=
-                jRange.toLongRange().getStart()
-                && iRange.toLongRange().getEnd() >= jRange.toLongRange().getEnd();
-            assertEquals(expected, iRange.encloses(jRange));
+            boolean expected = LongRangeHome.INSTANCE.toRange(iRange).getStart() <=
+              LongRangeHome.INSTANCE.toRange(jRange).getStart()
+                && LongRangeHome.INSTANCE.toRange(iRange).getEnd() >= LongRangeHome.INSTANCE.toRange(jRange).getEnd();
+            Assert.assertEquals(expected, iRange.encloses(jRange));
             // Check that the bit sets haven't changed.
-            assertEquals(iShifted, iRange.getStart());
-            assertEquals(jShifted, jRange.getStart());
+            Assert.assertEquals(iShifted, iRange.getStart());
+            Assert.assertEquals(jShifted, jRange.getStart());
           }
         }
       }

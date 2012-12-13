@@ -16,62 +16,97 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.collect.ImmutableList;
-
-
-import junit.framework.TestCase;
-
 import java.util.logging.Level;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.ranges.LongRange;
+import com.google.uzaygezen.core.ranges.LongRangeHome;
 
 /**
  * @author Daniel Aioanei
  */
-public class ListConcatCombinerTest extends TestCase {
+public class ListConcatCombinerTest {
 
-  public void testTwoAdjacentRangesAreCombinedInOneRange() {
-    FilterCombiner<RangeListFilter> c = ListConcatCombiner.UNBOUNDED_INSTANCE;
-    FilteredIndexRange<RangeListFilter> range1 = FilteredIndexRange.of(TestUtils.ZERO_ONE,
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE), false);
-    FilteredIndexRange<RangeListFilter> range2 = FilteredIndexRange.of(TestUtils.ONE_TEN,
-        new RangeListFilter(ImmutableList.of(TestUtils.ONE_TEN), false, Level.FINE), false);
-    SelectiveFilter<RangeListFilter> filter = c.combine(range1, range2, 0);
-    assertEquals(SelectiveFilter.of(new RangeListFilter(
-        ImmutableList.of(TestUtils.ZERO_TEN), false, Level.FINE), false), filter);
+  @Test
+  public void twoAdjacentRangesAreCombinedInOneRange() {
+    ListConcatCombiner<Long, LongContent, LongRange> c = ListConcatCombiner.unbounded();
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range1 = FilteredIndexRange.of(
+      TestUtils.ZERO_ONE,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range2 = FilteredIndexRange.of(
+      TestUtils.ONE_TEN,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.ONE_TEN), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    SelectiveFilter<RangeListFilter<Long, LongContent, LongRange>> filter = c.combine(
+      range1, range2, TestUtils.ZERO_LONG_CONTENT);
+    Assert.assertEquals(
+      SelectiveFilter.of(
+        new RangeListFilter<Long, LongContent, LongRange>(
+          ImmutableList.of(TestUtils.ZERO_TEN), false, Level.FINE, LongRangeHome.INSTANCE), false),
+      filter);
   }
 
-  public void testTwoBorderRangesCombinedInOneRangeWhenGapIsZeroEvenIfNotAdjacent() {
-    FilterCombiner<RangeListFilter> c = ListConcatCombiner.UNBOUNDED_INSTANCE;
-    FilteredIndexRange<RangeListFilter> range1 = FilteredIndexRange.of(TestUtils.ZERO_ONE,
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE), false);
-    FilteredIndexRange<RangeListFilter> range2 = FilteredIndexRange.of(TestUtils.TWO_TEN,
-        new RangeListFilter(ImmutableList.of(TestUtils.TWO_TEN), false, Level.FINE), false);
-    SelectiveFilter<RangeListFilter> filter = c.combine(range1, range2, 0);
-    assertEquals(SelectiveFilter.of(new RangeListFilter(
-        ImmutableList.of(TestUtils.ZERO_TEN), false, Level.FINE), false), filter);
+  @Test
+  public void twoBorderRangesCombinedInOneRangeWhenGapIsZeroEvenIfNotAdjacent() {
+    ListConcatCombiner<Long, LongContent, LongRange> c = ListConcatCombiner.unbounded();
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range1 = FilteredIndexRange.of(
+      TestUtils.ZERO_ONE,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range2 = FilteredIndexRange.of(
+      TestUtils.TWO_TEN,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.TWO_TEN), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    SelectiveFilter<RangeListFilter<Long, LongContent, LongRange>> filter = c.combine(
+      range1, range2, TestUtils.ZERO_LONG_CONTENT);
+    Assert.assertEquals(
+      SelectiveFilter.of(
+        new RangeListFilter<Long, LongContent, LongRange>(
+          ImmutableList.of(TestUtils.ZERO_TEN), false, Level.FINE, LongRangeHome.INSTANCE), false),
+      filter);
   }
 
-  public void testTwoBorderRangesCombinedInOneRangeWhenGapIsZero() {
-    FilterCombiner<RangeListFilter> c = ListConcatCombiner.UNBOUNDED_INSTANCE;
-    FilteredIndexRange<RangeListFilter> range1 = FilteredIndexRange.of(TestUtils.ZERO_FOUR,
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_TWO, TestUtils.THREE_FOUR), false,
-            Level.FINE), false);
-    FilteredIndexRange<RangeListFilter> range2 = FilteredIndexRange.of(TestUtils.SIX_TEN,
-        new RangeListFilter(ImmutableList.of(TestUtils.SIX_SEVEN, TestUtils.EIGHT_TEN), false,
-            Level.FINE), false);
-    SelectiveFilter<RangeListFilter> filter = c.combine(range1, range2, 0);
-    assertEquals(SelectiveFilter.of(new RangeListFilter(ImmutableList.of(
-        TestUtils.ZERO_TWO, TestUtils.THREE_SEVEN, TestUtils.EIGHT_TEN), false, Level.FINE), false),
-        filter);
+  @Test
+  public void twoBorderRangesCombinedInOneRangeWhenGapIsZero() {
+    ListConcatCombiner<Long, LongContent, LongRange> c = ListConcatCombiner.unbounded();
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range1 = FilteredIndexRange.of(
+      TestUtils.ZERO_FOUR,
+      new RangeListFilter<Long, LongContent, LongRange>(ImmutableList.of(
+        TestUtils.ZERO_TWO, TestUtils.THREE_FOUR), false, Level.FINE, LongRangeHome.INSTANCE),
+      false);
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range2 = FilteredIndexRange.of(
+      TestUtils.SIX_TEN,
+      new RangeListFilter<Long, LongContent, LongRange>(ImmutableList.of(
+        TestUtils.SIX_SEVEN, TestUtils.EIGHT_TEN), false, Level.FINE, LongRangeHome.INSTANCE),
+      false);
+    Object filter = c.combine(range1, range2, TestUtils.ZERO_LONG_CONTENT);
+    Assert.assertEquals(SelectiveFilter.of(
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.ZERO_TWO, TestUtils.THREE_SEVEN, TestUtils.EIGHT_TEN), false,
+        Level.FINE, LongRangeHome.INSTANCE), false), filter);
   }
-  
-  public void testConcatenatesListsWhenGapIsPositive() {
-    FilterCombiner<RangeListFilter> c = ListConcatCombiner.UNBOUNDED_INSTANCE;
-    FilteredIndexRange<RangeListFilter> range1 = FilteredIndexRange.of(TestUtils.ZERO_ONE,
-        new RangeListFilter(ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE), false);
-    FilteredIndexRange<RangeListFilter> range2 = FilteredIndexRange.of(TestUtils.SIX_TEN,
-        new RangeListFilter(ImmutableList.of(TestUtils.SIX_TEN), false, Level.FINE), false);
-    SelectiveFilter<RangeListFilter> filter = c.combine(range1, range2, 1);
-    assertEquals(SelectiveFilter.of(new RangeListFilter(ImmutableList.of(
-        TestUtils.ZERO_ONE, TestUtils.SIX_TEN), false, Level.FINE), false), filter);
+
+  @Test
+  public void concatenatesListsWhenGapIsPositive() {
+    ListConcatCombiner<Long, LongContent, LongRange> c = ListConcatCombiner.unbounded();
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range1 = FilteredIndexRange.of(
+      TestUtils.ZERO_ONE,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> range2 = FilteredIndexRange.of(
+      TestUtils.SIX_TEN,
+      new RangeListFilter<Long, LongContent, LongRange>(
+        ImmutableList.of(TestUtils.SIX_TEN), false, Level.FINE, LongRangeHome.INSTANCE), false);
+    SelectiveFilter<RangeListFilter<Long, LongContent, LongRange>> filter = c.combine(
+      range1, range2, TestUtils.ONE_LONG_CONTENT);
+    Assert.assertEquals(
+      SelectiveFilter.of(
+        new RangeListFilter<Long, LongContent, LongRange>(ImmutableList.of(
+          TestUtils.ZERO_ONE, TestUtils.SIX_TEN), false, Level.FINE, LongRangeHome.INSTANCE), false),
+      filter);
   }
 }

@@ -18,6 +18,7 @@ package com.google.uzaygezen.core;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -27,7 +28,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.uzaygezen.core.ranges.Content;
 
 /**
  * Assessor of spatial relationships that first check the input into an internal
@@ -58,19 +59,21 @@ import com.google.common.collect.Maps;
  *
  * @param <T> filter type
  */
-public class MapRegionInspector<T> implements RegionInspector<T> {
+public class MapRegionInspector<T, V extends Content<V>> implements RegionInspector<T, V> {
 
   private static final Logger logger = Logger.getLogger(MapRegionInspector.class.getName());
   
-  private final RegionInspector<T> delegate;
-  private final Map<Pow2LengthBitSetRange, NodeValue<CountingDoubleArray>> rolledupMap;
-  private final Map<BitVector, CountingDoubleArray> cacheHits;
+  private final RegionInspector<T, V> delegate;
+  private final Map<Pow2LengthBitSetRange, NodeValue<V>> rolledupMap;
+  private final Map<BitVector, V> cacheHits;
   
   /**
    * The maximum size of the stack is at most the depth of the tree from which
    * the map was created, which is at most 1 + mMax.
    */
-  private Deque<StackElement> stack = new ArrayDeque<StackElement>();
+  private Deque<StackElement<V>> stack = new ArrayDeque<>();
+
+  private final V zero, one;
   
   /**
    * 
@@ -83,19 +86,21 @@ public class MapRegionInspector<T> implements RegionInspector<T> {
    * TODO: Somehow remove the filter altogether from Assessment.
    */
   private MapRegionInspector(
-      Map<Pow2LengthBitSetRange, NodeValue<CountingDoubleArray>> rolledupMap,
-      RegionInspector<T> delegate, boolean disguiseCacheHits) {
+      Map<Pow2LengthBitSetRange, NodeValue<V>> rolledupMap,
+      RegionInspector<T, V> delegate, boolean disguiseCacheHits, V zero, V one) {
     this.rolledupMap = Preconditions.checkNotNull(rolledupMap, "rolledupMap");
     this.delegate = Preconditions.checkNotNull(delegate, "delegate");
     this.cacheHits =
-        disguiseCacheHits ? Maps.<BitVector, CountingDoubleArray>newHashMap() : null;
+        disguiseCacheHits ? new HashMap<BitVector, V>() : null;
     logger.info("disguiseCacheHits=" + disguiseCacheHits);
+    this.zero = zero;
+    this.one = one;
   }
 
-  public static <T> MapRegionInspector<T> create(
-      Map<Pow2LengthBitSetRange, NodeValue<CountingDoubleArray>> rolledupMap,
-      RegionInspector<T> delegate, boolean disguiseCacheHits) {
-    return new MapRegionInspector<T>(rolledupMap, delegate, disguiseCacheHits);
+  public static <T, V extends Content<V>> MapRegionInspector<T, V> create(
+      Map<Pow2LengthBitSetRange, NodeValue<V>> rolledupMap,
+      RegionInspector<T, V> delegate, boolean disguiseCacheHits, V zero, V one) {
+    return new MapRegionInspector<T, V>(rolledupMap, delegate, disguiseCacheHits, zero, one);
   }
 
   @Override
@@ -104,10 +109,10 @@ public class MapRegionInspector<T> implements RegionInspector<T> {
   }
   
   @Override
-  public Assessment<T> assess(
+  public Assessment<T, V> assess(
       Pow2LengthBitSetRange indexRange, List<Pow2LengthBitSetRange> orthotope) {
     Preconditions.checkState(!stack.isEmpty() || indexRange.getStart().isEmpty());
-    StackElement top;
+    StackElement<V> top;
     while ((top = stack.peek()) != null) {
       if (top.range.encloses(indexRange)) {
         break;
@@ -115,15 +120,15 @@ public class MapRegionInspector<T> implements RegionInspector<T> {
         stack.pop();
       }
     }
-    NodeValue<CountingDoubleArray> value = rolledupMap.get(indexRange);
-    final Assessment<T> result;
+    NodeValue<V> value = rolledupMap.get(indexRange);
+    final Assessment<T, V> result;
     if (value != null) {
       assert stack.isEmpty()
           || (stack.peek().range.encloses(indexRange) & !stack.peek().leaf);
-      Preconditions.checkState(value.getValue().getCount() > 0);
-      stack.push(new StackElement(
-          indexRange.clone(), value.getValue().getCount(), value.isLeaf()));
-      Assessment<T> localResult = delegateAssessment(indexRange, orthotope);
+      Preconditions.checkState(!value.getValue().isZero());
+      stack.push(new StackElement<V>(
+          indexRange.clone(), value.getValue(), value.isLeaf()));
+      Assessment<T, V> localResult = delegateAssessment(indexRange, orthotope);
       // TODO: use an equivalence relation instead of getLevel() == 0 for "group by"
       if (cacheHits != null && localResult.getOutcome() == SpatialRelation.COVERED
           && !localResult.isPotentialOverSelectivity()) {
@@ -132,21 +137,21 @@ public class MapRegionInspector<T> implements RegionInspector<T> {
            * Go deeper until we're outside the cache, or until the last significant
            * level has been reached.
            */
-          result = Assessment.makeOverlaps();
+          result = Assessment.makeOverlaps(zero);
         } else {
           // Here we drop the filter.
-          CountingDoubleArray old =
+          Content<V> old =
               cacheHits.put(indexRange.getStart().clone(), value.getValue().clone());
           Preconditions.checkState(old == null);
-          Preconditions.checkState(value.getValue().getCount() == 1);
-          result = Assessment.makeDisjoint(value.getValue().getCount());
+          Preconditions.checkState(value.getValue().isOne());
+          result = Assessment.makeDisjoint(value.getValue());
         }
       } else {
         result = localResult;
       }
     } else {
       if (rolledupMap.isEmpty()) {
-        result = Assessment.makeDisjoint(0);
+        result = Assessment.makeDisjoint(zero);
       } else {
         /*
          * latestPow2Range cannot be null, since the root is always in the map
@@ -156,34 +161,35 @@ public class MapRegionInspector<T> implements RegionInspector<T> {
         if (stack.peek().leaf) {
           result = delegateAssessment(indexRange, orthotope);
         } else {
-          result = Assessment.makeDisjoint(0);
+          result = Assessment.makeDisjoint(zero);
         }
       }
     }
     return result;
   }
 
-  private Assessment<T> delegateAssessment(
+  private Assessment<T, V> delegateAssessment(
       Pow2LengthBitSetRange indexRange, List<Pow2LengthBitSetRange> orthotope) {
-    assert indexRange.length() <= stack.peek().range.length();
-    Assessment<T> delegateAssessment = delegate.assess(indexRange, orthotope);
+    assert indexRange.getLevel() <= stack.peek().range.getLevel();
+    Assessment<T, V> delegateAssessment = delegate.assess(indexRange, orthotope);
     if (delegateAssessment.getOutcome() == SpatialRelation.DISJOINT
-        && delegateAssessment.getEstimate() > 1) {
-      long quotient = indexRange.length() * stack.peek().value
-          / stack.peek().range.length();
-      if (quotient != 0) {
-        if (delegateAssessment.getEstimate() > quotient) {
+        && (!delegateAssessment.getEstimate().isZero() & !delegateAssessment.getEstimate().isOne())) {
+      V quotient = stack.peek().value.clone();
+      quotient.shiftRight(
+        stack.peek().range.getLevel() - indexRange.getLevel());
+      if (!quotient.isZero()) {
+        if (delegateAssessment.getEstimate().compareTo(quotient) > 0) {
           return Assessment.makeDisjoint(quotient);
         }
       } else {
-        return Assessment.makeDisjoint(1);
+        return Assessment.makeDisjoint(one);
       }
     }
     return delegateAssessment;
   }
   
-  public Map<BitVector, CountingDoubleArray> getDisguisedCacheHits() {
-    return cacheHits == null ? ImmutableMap.<BitVector, CountingDoubleArray>of() : cacheHits;
+  public Map<BitVector, V> getDisguisedCacheHits() {
+    return cacheHits == null ? ImmutableMap.<BitVector, V>of() : cacheHits;
   }
 
   @Override
@@ -191,13 +197,13 @@ public class MapRegionInspector<T> implements RegionInspector<T> {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
   
-  private static class StackElement {
+  private static class StackElement<V extends Content<V>> {
     
     private final Pow2LengthBitSetRange range;
-    private final Long value;
+    private final V value;
     private final boolean leaf;
     
-    public StackElement(Pow2LengthBitSetRange range, long value, boolean leaf) {
+    public StackElement(Pow2LengthBitSetRange range, V value, boolean leaf) {
       this.range = range;
       this.value = value;
       this.leaf = leaf;

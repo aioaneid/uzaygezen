@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+
 /**
  * Space visitor that makes the query constructed so far available at each step.
  * After all the space has been visited, the query made available via {@link
@@ -25,4 +26,4 @@ package com.google.uzaygezen.core;
  * 
  * @author Daniel Aioanei
  */
-public interface QueryBuilder<T> extends SpaceVisitor, QueryFactory<T> {}
+public interface QueryBuilder<F, R> extends SpaceVisitor, QueryFactory<F, R> {}

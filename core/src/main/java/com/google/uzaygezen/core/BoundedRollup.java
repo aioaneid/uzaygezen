@@ -53,10 +53,6 @@ import java.util.Map.Entry;
  */
 public class BoundedRollup<K, V extends AdditiveValue<V>> implements StreamingRollup<K, V> {
 
-  /**
-   * An empty value prototype.
-   */
-  private final V emptyValue;
   private int nodeCount;
   
   /**
@@ -84,20 +80,19 @@ public class BoundedRollup<K, V extends AdditiveValue<V>> implements StreamingRo
   
   public static <K, V extends AdditiveValue<V>> BoundedRollup<K, V> create(
       V emptyValue, int maxNodes) {
-    return new BoundedRollup<K, V>(emptyValue, maxNodes);
+    return new BoundedRollup<K, V>(maxNodes);
   }
   
-  private BoundedRollup(V emptyValue, int maxNodes) {
+  private BoundedRollup(int maxNodes) {
     Preconditions.checkArgument(maxNodes > 0, "maxNodes must be positive");
     this.maxNodes = maxNodes;
-    this.emptyValue = emptyValue.clone();
     this.minHeap = new PriorityQueue<ComparableTreeNode>();
   }
 
   @Override
   public void feedRow(Iterator<K> leafPath, V v) {
     checkNotFinished();
-    Preconditions.checkArgument(emptyValue.compareTo(v) < 0, "v must not be zero.");
+    Preconditions.checkArgument(!v.isZero(), "v must not be zero.");
     if (root == null) {
       firstTime(leafPath, v);
     } else {

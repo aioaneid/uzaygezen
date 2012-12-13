@@ -23,6 +23,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.uzaygezen.core.ranges.Range;
 
 /**
  * Represents a computed query which can be applied, perhaps after further
@@ -32,28 +33,29 @@ import com.google.common.collect.Iterables;
  *
  * @param <T> filter type
  */
-public class Query<T> {
+public class Query<F, R> {
   
-  private final List<FilteredIndexRange<T>> filteredIndexRanges;
+  private final List<FilteredIndexRange<F, R>> filteredIndexRanges;
   
-  private static final Query<Object> EMPTY_QUERY =
-      of(ImmutableList.<FilteredIndexRange<Object>>of());
+  private static final Query<?, ?> EMPTY_QUERY =
+      of(ImmutableList.<FilteredIndexRange<Object, Range<Object, Object>>>of());
   
-  private Query(List<FilteredIndexRange<T>> filteredIndexRanges) {
+  private Query(List<FilteredIndexRange<F, R>> filteredIndexRanges) {
     this.filteredIndexRanges = ImmutableList.copyOf(filteredIndexRanges);
   }
 
-  public static <T> Query<T> of(List<FilteredIndexRange<T>> filteredIndexRanges) {
-    return new Query<T>(filteredIndexRanges); 
+  public static <F, R> Query<F, R> of(
+    List<FilteredIndexRange<F, R>> filteredIndexRanges) {
+    return new Query<F, R>(filteredIndexRanges); 
   }
   
-  public List<FilteredIndexRange<T>> getFilteredIndexRanges() {
+  public List<FilteredIndexRange<F, R>> getFilteredIndexRanges() {
     return filteredIndexRanges;
   }
 
   public boolean isPotentialOverSelectivity() {
     boolean potentialOverSelectivity = Iterables.any(
-        filteredIndexRanges, FilteredIndexRange.<T>potentialOverSelectivityExtractor());
+        filteredIndexRanges, FilteredIndexRange.<F, R>potentialOverSelectivityExtractor());
     return potentialOverSelectivity;
   }
   
@@ -67,7 +69,7 @@ public class Query<T> {
     if (!(o instanceof Query)) {
       return false;
     }
-    Query<?> other = (Query<?>) o;
+    Query<?, ?> other = (Query<?, ?>) o;
     return filteredIndexRanges.equals(other.filteredIndexRanges);
   }
   
@@ -77,7 +79,7 @@ public class Query<T> {
   }
   
   @SuppressWarnings("unchecked")
-  public static <T> Query<T> emptyQuery() {
-    return (Query<T>) EMPTY_QUERY;
+  public static <F, R> Query<F,R> emptyQuery() {
+    return (Query<F, R>) EMPTY_QUERY;
   }
 }

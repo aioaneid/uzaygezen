@@ -16,25 +16,28 @@
 
 package com.google.uzaygezen.core;
 
+import org.junit.Assert;
+import org.junit.Test;
 
-
-import junit.framework.TestCase;
+import com.google.uzaygezen.core.ranges.LongRange;
 
 /**
  * @author Daniel Aioanei
  */
-public class PlainFilterCombinerTest extends TestCase {
-  
-  public void testCombine() {
-    for (int i = 2; --i >= 0; ) {
-      for (int j = 2; --j >= 0; ) {
-        for (int k = 2; --k >= 0; ) {
-          SelectiveFilter<Object> actual = PlainFilterCombiner.INSTANCE.combine(
-              FilteredIndexRange.of(TestUtils.THREE_FOUR, new Object(), i == 1),
-              FilteredIndexRange.of(TestUtils.SIX_SEVEN, new Object(), j == 1),
-              k);
-          assertEquals(
-              SelectiveFilter.of(PlainFilterCombiner.FILTER, i == 1 | j == 1 | k == 1), actual);
+public class PlainFilterCombinerTest {
+
+  @Test
+  public void combine() {
+    Object filter = new Object();
+    PlainFilterCombiner<Object, Long, LongContent, LongRange> combiner = new PlainFilterCombiner<Object, Long, LongContent, LongRange>(
+      filter);
+    for (int i = 2; --i >= 0;) {
+      for (int j = 2; --j >= 0;) {
+        for (int k = 2; --k >= 0;) {
+          SelectiveFilter<Object> actual = combiner.combine(
+            FilteredIndexRange.of(TestUtils.THREE_FOUR, new Object(), i == 1),
+            FilteredIndexRange.of(TestUtils.SIX_SEVEN, new Object(), j == 1), new LongContent(k));
+          Assert.assertEquals(SelectiveFilter.of(filter, i == 1 | j == 1 | k == 1), actual);
         }
       }
     }

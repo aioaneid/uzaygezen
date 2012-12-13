@@ -16,17 +16,19 @@
 
 package com.google.uzaygezen.core;
 
+import org.junit.Assert;
+import org.junit.Test;
 
-
-import junit.framework.TestCase;
+import com.google.uzaygezen.core.ranges.LongRange;
 
 /**
  * @author Daniel Aioanei
  */
-public class FilteredIndexRangeTest extends TestCase {
+public class FilteredIndexRangeTest {
 
-  public void testEqualsAndHashCode() {
-    final FilteredIndexRange<Integer> x = FilteredIndexRange.of(
+  @Test
+  public void equalsAndHashCode() {
+    FilteredIndexRange<Integer, LongRange> x = FilteredIndexRange.of(
         LongRange.of(4, 10), 20, false);
     MoreAsserts.checkEqualsAndHashCodeMethods(x, x, true);
     MoreAsserts.checkEqualsAndHashCodeMethods(
@@ -37,11 +39,12 @@ public class FilteredIndexRangeTest extends TestCase {
         x, FilteredIndexRange.of(LongRange.of(4, 10), 21, true), false);
   }
 
-  public void testGetIndexRange() {
-    FilteredIndexRange<Long> filteredIndexRange =
+  @Test
+  public void getIndexRange() {
+    FilteredIndexRange<Long, LongRange> filteredIndexRange =
         FilteredIndexRange.of(TestUtils.ONE_TEN, 0L, false);
-    assertSame(TestUtils.ONE_TEN, filteredIndexRange.getIndexRange());
-    assertEquals(0, filteredIndexRange.getFilter().longValue());
-    assertFalse(filteredIndexRange.isPotentialOverSelectivity());
+    Assert.assertSame(TestUtils.ONE_TEN, filteredIndexRange.getIndexRange());
+    Assert.assertEquals(0, filteredIndexRange.getFilter().longValue());
+    Assert.assertFalse(filteredIndexRange.isPotentialOverSelectivity());
   }
 }

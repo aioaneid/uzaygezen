@@ -18,90 +18,96 @@ package com.google.uzaygezen.core;
 
 
 
-import junit.framework.TestCase;
-
 import java.util.BitSet;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public class BitSetMathTest extends TestCase {
+public class BitSetMathTest {
   
-  public void testIncrement() {
+  @Test
+  public void increment() {
     BitSet actual = new BitSet();
     for (int i = 0; i < 64; ++i) {
       BitSet expected = TestUtils.unsignedIntToLittleEndianBitSet(i);
-      assertEquals(expected, actual);
+      Assert.assertEquals(expected, actual);
       BitSetMath.increment(actual);
     }
   }
 
-  public void testRotateEmptyBitSet() {
+  @Test
+  public void rotateEmptyBitSet() {
     BitSet bs = new BitSet();
     BitSetMath.rotate(bs, 10, 1);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     BitSetMath.rotate(bs, 1, 10);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     BitSetMath.rotate(bs, 1, -10);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     BitSetMath.rotate(bs, 10, -1);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     BitSetMath.rotate(bs, 0, 10);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     BitSetMath.rotate(bs, 0, -10);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     BitSetMath.rotate(bs, 0, 0);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
   }
 
-  public void testRotateCardinalityOne() {
+  @Test
+  public void rotateCardinalityOne() {
     BitSet bs = new BitSet();
     bs.set(9);
     BitSet copy = (BitSet) bs.clone();
     BitSetMath.rotate(bs, 8, 0);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSetMath.rotate(bs, 8, 1000);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSetMath.rotate(bs, 8, -1000);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSetMath.rotate(bs, 10, 1);
     BitSet expected = new BitSet();
     expected.set(8);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
     BitSetMath.rotate(bs, 10, -1);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSetMath.rotate(bs, 10, -1);
     expected.clear();
     expected.set(0);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
     BitSetMath.rotate(bs, 10, 1);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
   }
 
-  public void testRotateCardinalityTwo() {
+  @Test
+  public void rotateCardinalityTwo() {
     BitSet bs = new BitSet();
     bs.set(5);
     bs.set(2);
     BitSet copy = (BitSet) bs.clone();
     BitSetMath.rotate(bs, 1000, 0);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSetMath.rotate(bs, 5, -5);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSet expected = new BitSet();
     expected.set(1);
     expected.set(5);
     BitSetMath.rotate(bs, 5, 1);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
     BitSetMath.rotate(bs, 5, -1);
-    assertEquals(copy, bs);
+    Assert.assertEquals(copy, bs);
     BitSetMath.rotate(bs, 6, -1);
     expected.clear();
     expected.set(0);
     expected.set(3);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
   }
 
-  public void testExtractBitRange() {
+  @Test
+  public void extractBitRange() {
     BitSet iAsBitSet = new BitSet();
     BitSet r = new BitSet();
     for (int i = 0; i < 64; ++i) {
@@ -109,55 +115,58 @@ public class BitSetMathTest extends TestCase {
         for (int to = from; to < 32; ++to) {
           BitSet expected = iAsBitSet.get(from, to);
           BitSetMath.extractBitRange(iAsBitSet, from, to, r);
-          assertEquals(expected, r);
+          Assert.assertEquals(expected, r);
         }
       }
       BitSetMath.increment(iAsBitSet);
     }
   }
 
-  public void testGrayCode() {
+  @Test
+  public void grayCode() {
     BitSet bs = new BitSet();
     BitSetMath.grayCode(bs);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     bs.set(0);
     BitSet expected = (BitSet) bs.clone();
     BitSetMath.grayCode(bs);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
     bs.set(1);
     expected.clear();
     expected.set(1);
     BitSetMath.grayCode(bs);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
     expected.clear();
     expected.set(0);
     expected.set(1);
     BitSetMath.grayCode(bs);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
   }
 
-  public void testGrayCodeInverse() {
+  @Test
+  public void grayCodeInverse() {
     BitSet bs = new BitSet();
     BitSetMath.grayCodeInverse(bs);
-    assertTrue(bs.isEmpty());
+    Assert.assertTrue(bs.isEmpty());
     bs.set(1);
     BitSet expected = new BitSet();
     expected.set(0, 2);
     BitSetMath.grayCodeInverse(bs);
-    assertEquals(expected, bs);
+    Assert.assertEquals(expected, bs);
   }
   
-  public void testGrayCodeInverseOfGrayCodeIsIdentityFunction() {
+  @Test
+  public void grayCodeInverseOfGrayCodeIsIdentityFunction() {
     BitSet bitSetCounter = new BitSet();
     for (int i = 0; i < 100; i++) {
       BitSet copy = (BitSet) bitSetCounter.clone();
       BitSet bs = (BitSet) bitSetCounter.clone();
       BitSetMath.grayCode(bs);
       BitSetMath.grayCodeInverse(bs);
-      assertEquals(copy, bs);
+      Assert.assertEquals(copy, bs);
       BitSetMath.grayCodeInverse(bs);
       BitSetMath.grayCode(bs);
-      assertEquals(copy, bs);
+      Assert.assertEquals(copy, bs);
       BitSetMath.increment(bitSetCounter);
     }
   }
@@ -167,7 +176,8 @@ public class BitSetMathTest extends TestCase {
    * report. However it also acts a a test for {@link BitSetMath#grayCode} to a
    * smaller extent.
    */
-  public void testDimensionOfChangeInGrayCodeIsTsb() {
+  @Test
+  public void dimensionOfChangeInGrayCodeIsTsb() {
     BitSet i = new BitSet();
     BitSet currentGc = new BitSet();
     BitSet tmp = new BitSet();
@@ -178,26 +188,28 @@ public class BitSetMathTest extends TestCase {
       BitSetMath.grayCode(tmp);
       currentGc.xor(tmp);
       currentGc.flip(tsb);
-      assertTrue(currentGc.isEmpty());
+      Assert.assertTrue(currentGc.isEmpty());
       currentGc.clear();
       currentGc.or(tmp);
     }
   }
 
-  public void testLittleEndianBitSetToNonNegativeLong() {
+  @Test
+  public void littleEndianBitSetToNonNegativeLong() {
     for (int i = 0; i < 1024; ++i) {
       BitSet bs = TestUtils.unsignedIntToLittleEndianBitSet(i);
       long bigInt = BitSetMath.littleEndianBitSetToNonNegativeLong(bs);
-      assertEquals(i, bigInt);
+      Assert.assertEquals(i, bigInt);
     }
   }
 
-  public void testNonNegativeLongToLittleEndianBitSet() {
+  @Test
+  public void nonNegativeLongToLittleEndianBitSet() {
     for (int i = 0; i < 1024; ++i) {
       BitSet expected = TestUtils.unsignedIntToLittleEndianBitSet(i);
       BitSet actual = new BitSet();
       BitSetMath.nonNegativeLongToLittleEndianBitSet(i, actual);
-      assertEquals(expected, actual);
+      Assert.assertEquals(expected, actual);
     }
   }
 }

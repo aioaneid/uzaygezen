@@ -23,6 +23,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.uzaygezen.core.ranges.Range;
 
 /**
  * Index range with a filter that is valid for the points with a space filling
@@ -32,44 +33,44 @@ import com.google.common.base.Predicate;
  * 
  * @author Daniel Aioanei
  */
-public class FilteredIndexRange<T> {
+public class FilteredIndexRange<F, R> {
 
-  private final LongRange indexRange;
-  private final T filter;
+  private final R indexRange;
+  private final F filter;
   private final boolean potentialOverSelectivity;
   
-  private static final Function<FilteredIndexRange<?>, Object>
-      FILTER_EXTRACTOR = new Function<FilteredIndexRange<?>, Object>() {
+  private static final Function<FilteredIndexRange<?, ?>, Object>
+      FILTER_EXTRACTOR = new Function<FilteredIndexRange<?, ?>, Object>() {
         @Override
-        public Object apply(FilteredIndexRange<?> from) {
+        public Object apply(FilteredIndexRange<?, ?> from) {
           return from.getFilter();
       }
     };
   
-  private static final Predicate<FilteredIndexRange<?>>
-      IS_POTENTIAL_OVER_SELECTIVITY = new Predicate<FilteredIndexRange<?>>() {
+  private static final Predicate<FilteredIndexRange<?, ?>>
+      IS_POTENTIAL_OVER_SELECTIVITY = new Predicate<FilteredIndexRange<?, ?>>() {
         @Override
-        public boolean apply(FilteredIndexRange<?> from) {
+        public boolean apply(FilteredIndexRange<?, ?> from) {
           return from.potentialOverSelectivity;
         }
   };
     
-  public FilteredIndexRange(LongRange indexRange, T filter, boolean potentialOverSelectivity) {
+  public FilteredIndexRange(R indexRange, F filter, boolean potentialOverSelectivity) {
     this.indexRange = Preconditions.checkNotNull(indexRange, "range");
     this.filter = Preconditions.checkNotNull(filter, "filter");
     this.potentialOverSelectivity = potentialOverSelectivity;
   }
 
-  public static <T> FilteredIndexRange<T> of(
-      LongRange indexRange, T filter, boolean potentialOverSelectivity) {
-    return new FilteredIndexRange<T>(indexRange, filter, potentialOverSelectivity);
+  public static <F, R> FilteredIndexRange<F, R> of(
+      R indexRange, F filter, boolean potentialOverSelectivity) {
+    return new FilteredIndexRange<F,R>(indexRange, filter, potentialOverSelectivity);
   }
   
-  public LongRange getIndexRange() {
+  public R getIndexRange() {
     return indexRange;
   }
 
-  public T getFilter() {
+  public F getFilter() {
     return filter;
   }
   
@@ -84,10 +85,10 @@ public class FilteredIndexRange<T> {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof FilteredIndexRange<?>)) {
+    if (!(o instanceof FilteredIndexRange<?, ?>)) {
       return false;
     }
-    FilteredIndexRange<?> other = (FilteredIndexRange<?>) o;
+    FilteredIndexRange<?, ?> other = (FilteredIndexRange<?, ?>) o;
     return indexRange.equals(other.indexRange) && filter.equals(other.filter)
         && potentialOverSelectivity == other.potentialOverSelectivity;
   }
@@ -98,12 +99,12 @@ public class FilteredIndexRange<T> {
   }
   
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public static <T> Function<FilteredIndexRange<T>, T> filterExtractor() {
+  public static <F, T, V, R extends Range<T, V>> Function<FilteredIndexRange<F, R>, F> filterExtractor() {
     return (Function) FILTER_EXTRACTOR;
   }
   
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public static <T> Predicate<FilteredIndexRange<T>> potentialOverSelectivityExtractor() {
+  public static <F, R> Predicate<FilteredIndexRange<F, R>> potentialOverSelectivityExtractor() {
     return (Predicate) IS_POTENTIAL_OVER_SELECTIVITY;
   }
 }

@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @param <T> filter type
  */
-public interface RegionInspector<T> {
+public interface RegionInspector<F, V> {
   
   int getNumberOfDimensions();
   
@@ -50,5 +50,5 @@ public interface RegionInspector<T> {
    * inspector.
    * @return the immutable assessment result
    */
-  Assessment<T> assess(Pow2LengthBitSetRange indexRange, List<Pow2LengthBitSetRange> orthotope);
+  Assessment<F, V> assess(Pow2LengthBitSetRange indexRange, List<Pow2LengthBitSetRange> orthotope);
 }

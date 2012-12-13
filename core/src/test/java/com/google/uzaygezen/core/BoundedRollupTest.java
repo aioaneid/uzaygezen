@@ -25,9 +25,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,109 +40,116 @@ import com.google.uzaygezen.core.TestUtils.IntArrayComparator;
 /**
  * @author Daniel Aioanei
  */
-public class BoundedRollupTest extends TestCase {
+public class BoundedRollupTest {
 
-  private static final double[] NO_MEASURES = {};
-  
-  public void testEmpty() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    assertNull(rollup.finish());
+  @Test
+  public void empty() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    Assert.assertNull(rollup.finish());
   }
 
-  public void testRootOnly() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    rollup.feedRow(Iterators.<Integer>emptyIterator(), newCountingArray());
-    MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = leaf();
-    assertEquals(expected, actual);
+  @Test
+  public void rootOnly() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    rollup.feedRow(Iterators.<Integer>emptyIterator(), TestUtils.ONE_LONG_CONTENT);
+    MapNode<Integer, LongContent> actual = rollup.finish();
+    MapNode<Integer, LongContent> expected = leaf();
+    Assert.assertEquals(expected, actual);
   }
 
-  public void testRootOnlyAddition() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
+  @Test
+  public void rootOnlyAddition() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
     int n = 10;
     for (int i = 0; i < n; ++i) {
-      rollup.feedRow(Iterators.<Integer>emptyIterator(), newCountingArray());
+      rollup.feedRow(Iterators.<Integer>emptyIterator(), TestUtils.ONE_LONG_CONTENT);
     }
-    MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = leaf(n);
-    assertEquals(expected, actual);
+    MapNode<Integer, LongContent> actual = rollup.finish();
+    MapNode<Integer, LongContent> expected = leaf(n);
+    Assert.assertEquals(expected, actual);
   }
 
-  private MapNode<Integer, CountingDoubleArray> leaf() {
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(
-        newCountingArray(), ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of());
+  private MapNode<Integer, LongContent> leaf() {
+    MapNode<Integer, LongContent> expected = MapNode.create(
+        TestUtils.ONE_LONG_CONTENT, ImmutableMap.<Integer, MapNode<Integer, LongContent>>of());
     return expected;
   }
 
-  private MapNode<Integer, CountingDoubleArray> leaf(int count) {
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(
-        newCountingArray(count), ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of());
+  private MapNode<Integer, LongContent> leaf(int count) {
+    MapNode<Integer, LongContent> expected = MapNode.create(
+        newCountingArray(count), ImmutableMap.<Integer, MapNode<Integer, LongContent>>of());
     return expected;
   }
 
-  public void testOneRealNode() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    rollup.feedRow(ImmutableList.of(4).iterator(), newCountingArray());
-    MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(newCountingArray(),
-        ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of(4, leaf()));
-    assertEquals(expected, actual);
+  @Test
+  public void oneRealNode() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    rollup.feedRow(ImmutableList.of(4).iterator(), TestUtils.ONE_LONG_CONTENT);
+    MapNode<Integer, LongContent> actual = rollup.finish();
+    MapNode<Integer, LongContent> expected = MapNode.create(TestUtils.ONE_LONG_CONTENT,
+        ImmutableMap.<Integer, MapNode<Integer, LongContent>>of(4, leaf()));
+    Assert.assertEquals(expected, actual);
   }
 
-  public void testTwinPairAtLevel1() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    rollup.feedRow(ImmutableList.of(5).iterator(), newCountingArray());
-    rollup.feedRow(ImmutableList.of(10).iterator(), newCountingArray());
-    MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(newCountingArray(2),
-        ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of(10, leaf(), 5, leaf()));
-    assertEquals(expected, actual);
+  @Test
+  public void twinPairAtLevel1() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    rollup.feedRow(ImmutableList.of(5).iterator(), TestUtils.ONE_LONG_CONTENT);
+    rollup.feedRow(ImmutableList.of(10).iterator(), TestUtils.ONE_LONG_CONTENT);
+    MapNode<Integer, LongContent> actual = rollup.finish();
+    MapNode<Integer, LongContent> expected = MapNode.create(newCountingArray(2),
+        ImmutableMap.<Integer, MapNode<Integer, LongContent>>of(10, leaf(), 5, leaf()));
+    Assert.assertEquals(expected, actual);
   }
 
-  public void testTwinPairAtLevel1RepeatLastNode() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    rollup.feedRow(ImmutableList.of(5).iterator(), newCountingArray());
-    rollup.feedRow(ImmutableList.of(10).iterator(), newCountingArray());
-    rollup.feedRow(ImmutableList.of(10).iterator(), newCountingArray());
-    MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(newCountingArray(3),
-        ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of(10, leaf(2), 5, leaf()));
-    assertEquals(expected, actual);
+  @Test
+  public void twinPairAtLevel1RepeatLastNode() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    rollup.feedRow(ImmutableList.of(5).iterator(), TestUtils.ONE_LONG_CONTENT);
+    rollup.feedRow(ImmutableList.of(10).iterator(), TestUtils.ONE_LONG_CONTENT);
+    rollup.feedRow(ImmutableList.of(10).iterator(), TestUtils.ONE_LONG_CONTENT);
+    MapNode<Integer, LongContent> actual = rollup.finish();
+    MapNode<Integer, LongContent> expected = MapNode.create(newCountingArray(3),
+        ImmutableMap.<Integer, MapNode<Integer, LongContent>>of(10, leaf(2), 5, leaf()));
+    Assert.assertEquals(expected, actual);
   }
 
-  public void testTwinPairAtLevel1ButGoingBackToFirstChildFails() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    rollup.feedRow(ImmutableList.of(5).iterator(), newCountingArray());
-    rollup.feedRow(ImmutableList.of(10).iterator(), newCountingArray());
+  @Test
+  public void twinPairAtLevel1ButGoingBackToFirstChildFails() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    rollup.feedRow(ImmutableList.of(5).iterator(), TestUtils.ONE_LONG_CONTENT);
+    rollup.feedRow(ImmutableList.of(10).iterator(), TestUtils.ONE_LONG_CONTENT);
     try {
-      rollup.feedRow(ImmutableList.of(5).iterator(), newCountingArray());
-      fail("IllegalArgumentException expected");
+      rollup.feedRow(ImmutableList.of(5).iterator(), TestUtils.ONE_LONG_CONTENT);
+      Assert.fail("IllegalArgumentException expected");
     } catch (IllegalArgumentException ex) {
       MoreAsserts.assertContainsRegex("Node already there.", ex.getMessage());
     }
   }
 
-  public void testTwinPairAtLevel2() {
-    BoundedRollup<Integer, CountingDoubleArray> rollup =
-        BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-    rollup.feedRow(ImmutableList.of(100, 5).iterator(), newCountingArray());
-    rollup.feedRow(ImmutableList.of(100, 10).iterator(), newCountingArray());
-    MapNode<Integer, CountingDoubleArray> actual = rollup.finish();
-    MapNode<Integer, CountingDoubleArray> expected = MapNode.create(newCountingArray(2),
-        ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of(
+  @Test
+  public void twinPairAtLevel2() {
+    BoundedRollup<Integer, LongContent> rollup =
+        BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+    rollup.feedRow(ImmutableList.of(100, 5).iterator(), TestUtils.ONE_LONG_CONTENT);
+    rollup.feedRow(ImmutableList.of(100, 10).iterator(), TestUtils.ONE_LONG_CONTENT);
+    MapNode<Integer, LongContent> actual = rollup.finish();
+    MapNode<Integer, LongContent> expected = MapNode.create(newCountingArray(2),
+        ImmutableMap.<Integer, MapNode<Integer, LongContent>>of(
             100, MapNode.create(newCountingArray(2), ImmutableMap
-                .<Integer, MapNode<Integer, CountingDoubleArray>>of(10, leaf(), 5, leaf()))));
-    assertEquals(expected, actual);
+                .<Integer, MapNode<Integer, LongContent>>of(10, leaf(), 5, leaf()))));
+    Assert.assertEquals(expected, actual);
   }
 
-  public void testNodeAndLeafCount() {
+  @Test
+  public void nodeAndLeafCount() {
     final List<int[]> list = Lists.newArrayList();
     IntArrayCallback callback = new ListCollector(list);
     for (int n = 0; n < 8; ++n) {
@@ -150,22 +157,23 @@ public class BoundedRollupTest extends TestCase {
       // Exact sum means that no array will be a prefix of another one.
       TestUtils.generateSpecWithExactSum(n, 2 * n, callback);
       Collections.sort(list, IntArrayComparator.INSTANCE);
-      BoundedRollup<Integer, CountingDoubleArray> rollup =
-          BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-      MapNode<Integer, CountingDoubleArray> actual = createTree(list, rollup);
+      BoundedRollup<Integer, LongContent> rollup =
+          BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+      MapNode<Integer, LongContent> actual = createTree(list, rollup);
       checkTreeIsComplete(list, n, actual);
     }
   }
 
   private void checkTreeIsComplete(final List<int[]> list, int n,
-      MapNode<Integer, CountingDoubleArray> actual) {
-    assertEquals(list.size(), actual.getValue().getCount());
+      MapNode<Integer, LongContent> actual) {
+    Assert.assertEquals(list.size(), actual.getValue().value());
     int[] subtreeSizeAndLeafCount = actual.subtreeSizeAndLeafCount();
-    assertEquals(n == 0 ? 1 : 2 * list.size(), subtreeSizeAndLeafCount[0]);
-    assertEquals(list.size(), subtreeSizeAndLeafCount[1]);
+    Assert.assertEquals(n == 0 ? 1 : 2 * list.size(), subtreeSizeAndLeafCount[0]);
+    Assert.assertEquals(list.size(), subtreeSizeAndLeafCount[1]);
   }
 
-  public void testOneNodeAtMost() {
+  @Test
+  public void oneNodeAtMost() {
     final List<int[]> list = Lists.newArrayList();
     IntArrayCallback callback = new ListCollector(list);
     for (int n = 0; n < 8; ++n) {
@@ -173,15 +181,16 @@ public class BoundedRollupTest extends TestCase {
       // Exact sum means that no array will be a prefix of another one.
       TestUtils.generateSpecWithExactSum(n, 2 * n, callback);
       Collections.sort(list, IntArrayComparator.INSTANCE);
-      BoundedRollup<Integer, CountingDoubleArray> rollup =
-          BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), 1);
-      MapNode<Integer, CountingDoubleArray> actual = createTree(list, rollup);
-      assertEquals(MapNode.create(new CountingDoubleArray(list.size(), new double[0]),
-          ImmutableMap.<Integer, MapNode<Integer, CountingDoubleArray>>of()), actual);
+      BoundedRollup<Integer, LongContent> rollup =
+          BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, 1);
+      MapNode<Integer, LongContent> actual = createTree(list, rollup);
+      Assert.assertEquals(MapNode.create(new LongContent(list.size()),
+          ImmutableMap.<Integer, MapNode<Integer, LongContent>>of()), actual);
     }
   }
 
-  public void testSubtreeIsOptimalWithinConstraints() {
+  @Test
+  public void subtreeIsOptimalWithinConstraints() {
     final List<int[]> list = Lists.newArrayList();
     IntArrayCallback callback = new ListCollector(list);
     for (int n = 0; n < 3; ++n) {
@@ -189,52 +198,53 @@ public class BoundedRollupTest extends TestCase {
       // Exact sum means that no array will be a prefix of another one.
       TestUtils.generateSpecWithExactSum(n, 2 * n, callback);
       Collections.sort(list, IntArrayComparator.INSTANCE);
-      BoundedRollup<Integer, CountingDoubleArray> rollup =
-          BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), Integer.MAX_VALUE);
-      MapNode<Integer, CountingDoubleArray> fullTreeRoot = createTree(list, rollup);
+      BoundedRollup<Integer, LongContent> rollup =
+          BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, Integer.MAX_VALUE);
+      MapNode<Integer, LongContent> fullTreeRoot = createTree(list, rollup);
       checkTreeIsComplete(list, n, fullTreeRoot);
       int fullTreeSize = fullTreeRoot.subtreeSizeAndLeafCount()[0];
       for (int i = 1; i <= fullTreeSize + 5; ++i) {
-        List<List<MapNode<Integer, CountingDoubleArray>>> allPossibleExpansions =
+        List<List<MapNode<Integer, LongContent>>> allPossibleExpansions =
             allPossibleExpansions(fullTreeRoot, i);
-        BoundedRollup<Integer, CountingDoubleArray> constrainedRollup =
-            BoundedRollup.create(CountingDoubleArray.newEmptyValue(0), i);
-        MapNode<Integer, CountingDoubleArray> constrainedTreeRoot =
+        BoundedRollup<Integer, LongContent> constrainedRollup =
+            BoundedRollup.create(TestUtils.ZERO_LONG_CONTENT, i);
+        MapNode<Integer, LongContent> constrainedTreeRoot =
             createTree(list, constrainedRollup);
-        List<MapNode<Integer, CountingDoubleArray>> actual = constrainedTreeRoot.preorder();
-        List<List<MapNode<Integer, CountingDoubleArray>>> all =
+        List<MapNode<Integer, LongContent>> actual = constrainedTreeRoot.preorder();
+        List<List<MapNode<Integer, LongContent>>> all =
             toSortedValueListList(allPossibleExpansions);
-        List<MapNode<Integer, CountingDoubleArray>> constrained = toSortedValueList(actual);
-        List<List<MapNode<Integer, CountingDoubleArray>>> allSameSize = Lists.newArrayList();
-        for (List<MapNode<Integer, CountingDoubleArray>> row : all) {
-          assertTrue(row.size() <= constrained.size());
+        List<MapNode<Integer, LongContent>> constrained = toSortedValueList(actual);
+        List<List<MapNode<Integer, LongContent>>> allSameSize = Lists.newArrayList();
+        for (List<MapNode<Integer, LongContent>> row : all) {
+          Assert.assertTrue(row.size() <= constrained.size());
           if (row.size() == constrained.size()) {
             allSameSize.add(row);
           }
         }
-        assertEquals(Collections.max(allSameSize,
-            new ListComparator<MapNode<Integer, CountingDoubleArray>>(
-                new MapNodeValueComparator<Integer, CountingDoubleArray>())), constrained);
+        Assert.assertEquals(Collections.max(allSameSize,
+            new ListComparator<MapNode<Integer, LongContent>>(
+                new MapNodeValueComparator<Integer, LongContent>())), constrained);
       }
     }
   }
   
-  private MapNode<Integer, CountingDoubleArray> createTree(
-      final List<int[]> list, BoundedRollup<Integer, CountingDoubleArray> rollup) {
+  private MapNode<Integer, LongContent> createTree(
+      final List<int[]> list, BoundedRollup<Integer, LongContent> rollup) {
     for (int[] array : list) {
-      rollup.feedRow(Ints.asList(array).iterator(), newCountingArray());
+      rollup.feedRow(Ints.asList(array).iterator(), TestUtils.ONE_LONG_CONTENT);
     }
-    MapNode<Integer, CountingDoubleArray> root = rollup.finish();
+    MapNode<Integer, LongContent> root = rollup.finish();
     return root;
   }
   
   /**
    * Test the test helper method {@link #allPossibleExpansions}.
    */
-  public void testAllPossibleExpansionsForRootOnly() {
+  @Test
+  public void allPossibleExpansionsForRootOnly() {
     MapNode<Integer, String> root =
         MapNode.create("x", ImmutableMap.<Integer, MapNode<Integer, String>>of());
-    assertTrue(allPossibleExpansions(root, 0).isEmpty());
+    Assert.assertTrue(allPossibleExpansions(root, 0).isEmpty());
     for (int i = 1; i < 3; ++i) {
       MoreAsserts.assertContentsAnyOrder(allPossibleExpansions(root, i), ImmutableList.of(root));
     }
@@ -243,7 +253,8 @@ public class BoundedRollupTest extends TestCase {
   /**
    * Test the test helper method {@link #allPossibleExpansions}.
    */
-  public void testAllPossibleExpansionsForThreeNodes() {
+  @Test
+  public void allPossibleExpansionsForThreeNodes() {
     MapNode<Integer, String> rightGrandchild =
         MapNode.create("d", ImmutableMap.<Integer, MapNode<Integer, String>>of());
     MapNode<Integer, String> rightChild =
@@ -252,7 +263,7 @@ public class BoundedRollupTest extends TestCase {
         MapNode.create("b", ImmutableMap.<Integer, MapNode<Integer, String>>of());
     MapNode<Integer, String> root = MapNode.create(
         "a", ImmutableMap.<Integer, MapNode<Integer, String>>of(0, leftChild, 1, rightChild));
-    assertTrue(allPossibleExpansions(root, 0).isEmpty());
+    Assert.assertTrue(allPossibleExpansions(root, 0).isEmpty());
     MoreAsserts.assertContentsAnyOrder(allPossibleExpansions(root, 1), ImmutableList.of(root));
     MoreAsserts.assertContentsAnyOrder(allPossibleExpansions(root, 2), ImmutableList.of(root));
     MoreAsserts.assertContentsAnyOrder(toIdentitySetList(allPossibleExpansions(root, 3)),
@@ -278,7 +289,7 @@ public class BoundedRollupTest extends TestCase {
     Set<MapNode<K, V>> set =
         Collections.newSetFromMap(new IdentityHashMap<MapNode<K, V>, Boolean>());
     set.addAll(list);
-    assertEquals(list.size(), set.size());
+    Assert.assertEquals(list.size(), set.size());
     return set;
   }
 
@@ -340,7 +351,7 @@ public class BoundedRollupTest extends TestCase {
               List<List<MapNode<K, V>>> childExpansions =
                   allExpansionsWithExactNodeCount(children.get(i), m[i] + 1);
               for (List<MapNode<K, V>> childExpansion : childExpansions) {
-                assertEquals(m[i] + 1, childExpansion.size());
+                Assert.assertEquals(m[i] + 1, childExpansion.size());
               }
               if (childExpansions.isEmpty()) {
                 return;
@@ -348,7 +359,7 @@ public class BoundedRollupTest extends TestCase {
                 expansionSet.add(childExpansions);
               }
             }
-            assertEquals(m.length, expansionSet.size());
+            Assert.assertEquals(m.length, expansionSet.size());
             childrenExpansions.add(expansionSet);
           }
         }
@@ -379,17 +390,13 @@ public class BoundedRollupTest extends TestCase {
       }
     }
     for (List<MapNode<K, V>> list : result) {
-      assertEquals(exactNodes, list.size());
+      Assert.assertEquals(exactNodes, list.size());
     }
     return result;
   }
 
-  private CountingDoubleArray newCountingArray() {
-    return new CountingDoubleArray(NO_MEASURES);
-  }
-
-  private CountingDoubleArray newCountingArray(long count) {
-    return new CountingDoubleArray(count, NO_MEASURES);
+  private LongContent newCountingArray(long count) {
+    return new LongContent(count);
   }
   
   /**

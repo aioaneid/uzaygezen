@@ -16,16 +16,18 @@
 
 package com.google.uzaygezen.core;
 
-import junit.framework.TestCase;
-
 import java.util.BitSet;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public class LongBitVectorTest extends TestCase {
+public class LongBitVectorTest {
 
-  public void testCompareTo() {
+  @Test
+  public void compareTo() {
     int n = 10;
     LongBitVector x = new LongBitVector(64);
     LongBitVector negativeX = new LongBitVector(64);
@@ -37,40 +39,43 @@ public class LongBitVectorTest extends TestCase {
       for (long j = 1 << n; --j >= 0; ) {
         y.copyFrom(j);
         negativeY.copyFrom(-j);
-        assertEquals(Long.valueOf(i).compareTo(Long.valueOf(j)), Long.signum(x.compareTo(y)));
-        assertEquals(j == 0 ? Long.signum(i)
+        Assert.assertEquals(Long.valueOf(i).compareTo(Long.valueOf(j)), Long.signum(x.compareTo(y)));
+        Assert.assertEquals(j == 0 ? Long.signum(i)
             : (i == 0 ? -1 : Long.valueOf(-i).compareTo(Long.valueOf(-j))),
             Long.signum(negativeX.compareTo(negativeY)));
-        assertEquals(j == 0 ? Long.signum(i) : -1, Long.signum(x.compareTo(negativeY)));
-        assertEquals(j == 0 ? -Long.signum(i) : +1, Long.signum(negativeY.compareTo(x)));
+        Assert.assertEquals(j == 0 ? Long.signum(i) : -1, Long.signum(x.compareTo(negativeY)));
+        Assert.assertEquals(j == 0 ? -Long.signum(i) : +1, Long.signum(negativeY.compareTo(x)));
       }
     }
   }
   
-  public void testCompareToCornerCases() {
+  @Test
+  public void compareToCornerCases() {
     LongBitVector x = new LongBitVector(64);
     LongBitVector y = new LongBitVector(64);
     y.copyFrom(Long.MAX_VALUE);
-    assertTrue(x.compareTo(y) < 0);
+    Assert.assertTrue(x.compareTo(y) < 0);
     x.copyFrom(Long.MIN_VALUE);
-    assertTrue(y.compareTo(x) < 0);
+    Assert.assertTrue(y.compareTo(x) < 0);
     y.copyFrom(-1);
-    assertTrue(x.compareTo(y) < 0);
+    Assert.assertTrue(x.compareTo(y) < 0);
   }
   
-  public void testCopyFromBitSet() {
+  @Test
+  public void copyFromBitSet() {
     int n = 10;
     LongBitVector x = new LongBitVector(n);
     BitSet counter = new BitSet(n);
     for (long i = 0; i < 1 << n; ++i) {
       x.copyFrom(counter);
-      assertEquals(i, x.toLong());
-      assertEquals(64 - Long.numberOfLeadingZeros(i), x.length());
+      Assert.assertEquals(i, x.toLong());
+      Assert.assertEquals(64 - Long.numberOfLeadingZeros(i), x.length());
       BitSetMath.increment(counter);
     }
   }
   
-  public void testOptimisationForGrayCodeDoesNotAffectResults() {
+  @Test
+  public void optimisationForGrayCodeDoesNotAffectResults() {
     for (int bitCount = 5; --bitCount >= 0; ) {
       for (int i = 1 << bitCount; --i >= 0; ) {
         LongBitVector mu = new LongBitVector(bitCount);
@@ -82,7 +87,7 @@ public class LongBitVectorTest extends TestCase {
           r.grayCodeRank(mu, w, true);
           LongBitVector rCopy = r.clone();
           r.grayCodeRank(mu, w, false);
-          assertEquals(rCopy, r);
+          Assert.assertEquals(rCopy, r);
         }
       }
     }

@@ -22,6 +22,8 @@ import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Preconditions;
+import com.google.uzaygezen.core.ranges.Content;
+import com.google.uzaygezen.core.ranges.Range;
 
 /**
  * Filter combiner that works with filters consisting in a list of ranges, and
@@ -32,18 +34,20 @@ import com.google.common.base.Preconditions;
  * 
  * @author Daniel Aioanei
  */
-public class ListConcatCombiner implements FilterCombiner<RangeListFilter> {
+public class ListConcatCombiner<T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>>
+  implements FilterCombiner<RangeListFilter<T, V, R>, V, R> {
 
-  public static final ListConcatCombiner UNBOUNDED_INSTANCE =
-      new ListConcatCombiner(Integer.MAX_VALUE);
-  
   private final int threshold;
-  
+
   public ListConcatCombiner(int threshold) {
     Preconditions.checkArgument(threshold > 0, "threshold must be positive");
     this.threshold = threshold;
   }
-  
+
+  public static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> ListConcatCombiner<T, V, R> unbounded() {
+    return new ListConcatCombiner<>(Integer.MAX_VALUE);
+  }
+
   /**
    * If the gap is zero, joins the last index range and the first index range
    * into one range that covers both, and keeps the other ranges intact.
@@ -51,40 +55,46 @@ public class ListConcatCombiner implements FilterCombiner<RangeListFilter> {
    * the full information available in {@code gapEstimate}. Instead we extract
    * its signum and use that to optimise the situation when the gap is zero.
    * 
-   * @param lower must not be empty
-   * @param higher must not be empty
+   * @param lower
+   *          must not be empty
+   * @param higher
+   *          must not be empty
    * @return the computed list and whether the threshold was exceeded or one of
-   * the two filters already had potential over-selectivity.
+   *         the two filters already had potential over-selectivity.
    */
   @Override
-  public SelectiveFilter<RangeListFilter> combine(FilteredIndexRange<RangeListFilter> lower,
-      FilteredIndexRange<RangeListFilter> higher, long gapEstimate) {
+  public SelectiveFilter<RangeListFilter<T, V, R>> combine(
+    FilteredIndexRange<RangeListFilter<T, V, R>, R> lower,
+    FilteredIndexRange<RangeListFilter<T, V, R>, R> higher, V gapEstimate) {
     checkInputFilteredIndexRange(lower);
     checkInputFilteredIndexRange(higher);
-    RangeListFilter combinedFilter =
-        lower.getFilter().combine(higher.getFilter(), threshold, gapEstimate);
+    RangeListFilter<T, V, R> combinedFilter = lower.getFilter().combine(
+      higher.getFilter(), threshold, gapEstimate);
     /*
-     * Now we'll have the threshold exceeded information in both the filter
-     * and as the second element of the pair. The reason is that the caller of
-     * this method does not know about RangeListFilter, and instead it only
-     * knows that there is a type T representing the filter.
+     * Now we'll have the threshold exceeded information in both the filter and
+     * as the second element of the pair. The reason is that the caller of this
+     * method does not know about RangeListFilter, and instead it only knows
+     * that there is a type T representing the filter.
      */
-    return SelectiveFilter.of(combinedFilter, combinedFilter.isThresholdExceeded()
-        || lower.isPotentialOverSelectivity() || higher.isPotentialOverSelectivity());
+    return SelectiveFilter.of(
+      combinedFilter, combinedFilter.isThresholdExceeded() || lower.isPotentialOverSelectivity()
+        || higher.isPotentialOverSelectivity());
   }
-  
+
   /**
    * Checks some sanity properties of {@code filteredIndexRange}.
    */
-  private static void checkInputFilteredIndexRange(
-      FilteredIndexRange<RangeListFilter> filteredIndexRange) {
-    List<LongRange> filter = filteredIndexRange.getFilter().getRangeList();
-    Preconditions.checkArgument(filteredIndexRange.getIndexRange().getStart() ==
-        filter.get(0).getStart(), "invalid start");
-    Preconditions.checkArgument(filteredIndexRange.getIndexRange().getEnd() ==
-        filter.get(filter.size() - 1).getEnd(), "invalid end");
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkInputFilteredIndexRange(
+    FilteredIndexRange<RangeListFilter<T, V, R>, R> filteredIndexRange) {
+    List<R> filter = filteredIndexRange.getFilter().getRangeList();
+    Preconditions.checkArgument(
+      filteredIndexRange.getIndexRange().getStart().equals(filter.get(0).getStart()),
+      "invalid start");
+    Preconditions.checkArgument(
+      filteredIndexRange.getIndexRange().getEnd().equals(filter.get(filter.size() - 1).getEnd()),
+      "invalid end");
   }
-  
+
   @Override
   public String toString() {
     return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);

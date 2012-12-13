@@ -34,6 +34,8 @@ public interface AdditiveValue<V> extends Comparable<V> {
    */
   void add(V other);
   
+  boolean isZero();
+  
   /**
    * Clones this value and produces another one that can be modified
    * independently.

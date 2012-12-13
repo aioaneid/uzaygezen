@@ -24,6 +24,11 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.uzaygezen.core.ranges.Content;
+import com.google.uzaygezen.core.ranges.Measurable;
+import com.google.uzaygezen.core.ranges.Range;
+import com.google.uzaygezen.core.ranges.RangeHome;
+import com.google.uzaygezen.core.ranges.RangeUtil;
 
 /**
  * Assessor of spatial relationships that works with a query region composed of
@@ -34,23 +39,27 @@ import com.google.common.base.Preconditions;
  *
  * @param <T> filter type
  */
-public class SimpleRegionInspector<T> implements RegionInspector<T> {
+public class SimpleRegionInspector<F, T, V extends AdditiveValue<V>, R extends Measurable<V>> implements RegionInspector<F, V> {
   
   /**
    * Set of hopefully disjoint orthotopes. Currently we don't check that they
    * are disjoint, but we might in the future.
    */
-  private final List<? extends List<LongRange>> queryRegion;
+  private final List<? extends List<R>> queryRegion;
   
   /**
    * Threshold for the orthotope content under which OVERLAPS becomes COVERED.
    */
-  private final long minOverlappingContent;
+  private final V minOverlappingContent;
   
   /**
    * Factory of non-null filter objects.
    */
-  private final Function<? super LongRange, T> filterFactory;
+  private final Function<? super R, F> filterFactory;
+  
+  private final RangeHome<T, V, R> rangeHome;
+  
+  private final V zero;
   
   /**
    * @param <T> filter type
@@ -64,10 +73,12 @@ public class SimpleRegionInspector<T> implements RegionInspector<T> {
    * @param filterFactory factory of non-null filter objects
    * @return a simple region inspector
    */
-  public static <T> SimpleRegionInspector<T> create(
-      List<? extends List<LongRange>> queryRegion,
-      long minOverlappingContent, Function<? super LongRange, T> filterFactory) {
-    return new SimpleRegionInspector<T>(queryRegion, minOverlappingContent, filterFactory);
+  public static <F, T, V extends Content<V>, R extends Range<T, V>> SimpleRegionInspector<F, T, V, R> create(
+      List<? extends List<R>> queryRegion,
+      V minOverlappingContent, Function<? super R, F> filterFactory,
+      RangeHome<T, V, R> rangeHome, V zero) {
+    return new SimpleRegionInspector<F, T, V, R>(
+      queryRegion, minOverlappingContent, filterFactory, rangeHome, zero);
   }
   
   /**
@@ -81,19 +92,22 @@ public class SimpleRegionInspector<T> implements RegionInspector<T> {
    * @param filterFactory factory of non-null filter objects
    */
   private SimpleRegionInspector(
-      List<? extends List<LongRange>> queryRegion,
-      long minOverlappingContent, Function<? super LongRange, T> filterFactory) {
-    Iterator<? extends List<LongRange>> queryRegionIterator = queryRegion.iterator();
-    List<LongRange> firstOrthotope = queryRegionIterator.next();
+      List<? extends List<R>> queryRegion,
+      V minOverlappingContent, Function<? super R, F> filterFactory,
+      RangeHome<T, V, R> rangeHome, V zero) {
+    Iterator<? extends List<R>> queryRegionIterator = queryRegion.iterator();
+    List<R> firstOrthotope = queryRegionIterator.next();
     while (queryRegionIterator.hasNext()) {
-      List<LongRange> orthotope = queryRegionIterator.next();
+      List<R> orthotope = queryRegionIterator.next();
       Preconditions.checkArgument(firstOrthotope.size() == orthotope.size());
     }
     this.queryRegion = queryRegion;
-    Preconditions.checkArgument(minOverlappingContent > 0,
+    Preconditions.checkArgument(!minOverlappingContent.isZero(),
         "minOverlappingContent must be positive but it is %s.", minOverlappingContent);
     this.minOverlappingContent = minOverlappingContent;
     this.filterFactory = filterFactory;
+    this.rangeHome = rangeHome;
+    this.zero = zero;
   }
 
   /**
@@ -105,26 +119,26 @@ public class SimpleRegionInspector<T> implements RegionInspector<T> {
    * in the query region, we could return OVERLAP early.
    */
   @Override
-  public Assessment<T> assess(
-      Pow2LengthBitSetRange indexRange, List<Pow2LengthBitSetRange> orthotope) {
-    final long rangeLength = indexRange.length();
-    assert rangeLength == Pow2LengthBitSetRange.content(orthotope)
-        : String.format("rangeLength=%s but content=%s",
-            rangeLength, Pow2LengthBitSetRange.content(orthotope));
-    long commonContent = LongRange.overlapSum(
-        Pow2LengthBitSetRange.toLongOrthotope(orthotope), queryRegion);
-    int cmp = Long.valueOf(commonContent).compareTo(Long.valueOf(rangeLength));
+  public Assessment<F, V> assess(
+      Pow2LengthBitSetRange indexBitSetRange, List<Pow2LengthBitSetRange> orthotope) {
+    assert indexBitSetRange.getLevel() == Pow2LengthBitSetRange.levelSum(orthotope)
+        : String.format("rangeLevel=%s but content=%s",
+          indexBitSetRange.getLevel(), Pow2LengthBitSetRange.levelSum(orthotope));
+    V commonContent = zero.clone();
+    RangeUtil.overlapSum(RangeUtil.toOrthotope(orthotope, rangeHome), queryRegion, rangeHome, commonContent);
+    R indexRange = rangeHome.toRange(indexBitSetRange);
+    V rangeLength = indexRange.length();
+    int cmp = commonContent.compareTo(rangeLength);
     if (cmp == 0) {
-      return Assessment.makeCovered(filterFactory.apply(indexRange.toLongRange()), false);
+      return Assessment.makeCovered(filterFactory.apply(indexRange), false, zero);
     } else {
-      assert cmp == -1;
-      if (commonContent == 0) {
+      if (commonContent.equals(zero)) {
         return Assessment.makeDisjoint(rangeLength);
       } else {
-        if (rangeLength >= minOverlappingContent) {
-          return Assessment.makeOverlaps();
+        if (rangeLength.compareTo(minOverlappingContent) >= 0) {
+          return Assessment.makeOverlaps(zero);
         } else {
-          return Assessment.makeCovered(filterFactory.apply(indexRange.toLongRange()), true);
+          return Assessment.makeCovered(filterFactory.apply(indexRange), true, zero);
         }
       }
     }

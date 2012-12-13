@@ -16,13 +16,16 @@
 
 package com.google.uzaygezen.core;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.uzaygezen.core.NodeList.Node;
-
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.NodeList.Node;
+import com.google.uzaygezen.core.ranges.Content;
+import com.google.uzaygezen.core.ranges.Range;
+import com.google.uzaygezen.core.ranges.RangeHome;
 
 /**
  * Query builder that can be configured with a maximum number of filtered index
@@ -38,23 +41,26 @@ import java.util.Queue;
  * 
  * @param <T> filter type
  */
-public class BacktrackingQueryBuilder<T> implements QueryBuilder<T> {
+public class BacktrackingQueryBuilder<F, T, V extends Content<V>, R extends Range<T, V>> implements QueryBuilder<F, R> {
 
-  private final RegionInspector<T> regionInspector;
-  private final FilterCombiner<T> filterCombiner;
+  private final RegionInspector<F, V> regionInspector;
+  private final FilterCombiner<F, V, R> filterCombiner;
   private final int maxFilteredIndexRanges;
   private final boolean alwaysRemoveVacuum;
+  
+  private final RangeHome<T, V, R> rangeHome;
+  private final V zero;
   
   /**
    * The gap between the last 2 ranges, if any; otherwise zero.
    */
-  private long currentGap = 0;
+  private V currentGap;
   
   /**
    * The last node sits only here and it doesn't have a correspondent in the
    * min-heap.
    */
-  private final NodeList<FilteredIndexRange<T>> nodeList = LinkedNodeList.create();
+  private final NodeList<FilteredIndexRange<F, R>> nodeList = LinkedNodeList.create();
 
   /**
    * Never exceeds {@link #maxFilteredIndexRanges} in size.
@@ -110,10 +116,10 @@ public class BacktrackingQueryBuilder<T> implements QueryBuilder<T> {
      * exactly where the previous finished one had its upper bound.
      */
     assert (lastFinishedIndexRange == null) == (indexRange.getStart().length() == 0);
-    assert (lastFinishedIndexRange == null) || (lastFinishedIndexRange.toLongRange().getEnd() ==
-        indexRange.toLongRange().getStart()) : String.format(
+    assert (lastFinishedIndexRange == null) || (rangeHome.toRange(lastFinishedIndexRange).getEnd() ==
+        rangeHome.toRange(indexRange).getStart()) : String.format(
             "lastFinishedIndexRange=%s indeRange=%s", lastFinishedIndexRange, indexRange);
-    Assessment<T> assessment = regionInspector.assess(indexRange, orthotope);
+    Assessment<F, V> assessment = regionInspector.assess(indexRange, orthotope);
     switch (assessment.getOutcome()) {
       case OVERLAPS:
         return true;
@@ -133,44 +139,44 @@ public class BacktrackingQueryBuilder<T> implements QueryBuilder<T> {
   }
   
   private void processCoveredNode(
-      Pow2LengthBitSetRange indexRange, T filter, boolean potentialOverSelectivityInRange) {
-    LongRange indexLongRange = indexRange.toLongRange();
-    FilteredIndexRange<T> indexQueryRange =
-        new FilteredIndexRange<T>(indexLongRange, filter, potentialOverSelectivityInRange);
+      Pow2LengthBitSetRange indexBitSetRange, F filter, boolean potentialOverSelectivityInRange) {
+    R indexRange = rangeHome.toRange(indexBitSetRange);
+    FilteredIndexRange<F, R> indexQueryRange =
+        new FilteredIndexRange<F, R>(indexRange, filter, potentialOverSelectivityInRange);
     // Fetching the last node is a constant time operation.
-    Node<FilteredIndexRange<T>> end =
+    Node<FilteredIndexRange<F, R>> end =
           nodeList.isEmpty() ? null : nodeList.getNode(nodeList.size() - 1);
-    if (alwaysRemoveVacuum & end != null & currentGap == 0) {
-      SelectiveFilter<T> combinedFilter = filterCombiner.combine(end.get(), indexQueryRange, 0);
-      end.set(new FilteredIndexRange<T>(LongRange.of(end.get().getIndexRange().getStart(),
-          indexLongRange.getEnd()), combinedFilter.getFilter(),
+    if (alwaysRemoveVacuum & end != null & currentGap.isZero()) {
+      SelectiveFilter<F> combinedFilter = filterCombiner.combine(end.get(), indexQueryRange, zero);
+      end.set(new FilteredIndexRange<F, R>(rangeHome.of(end.get().getIndexRange().getStart(),
+          indexRange.getEnd()), combinedFilter.getFilter(),
           combinedFilter.isPotentialOverSelectivity() | potentialOverSelectivityInRange));
       potentialOverSelectivity |= combinedFilter.isPotentialOverSelectivity();
     } else {
-      Node<FilteredIndexRange<T>> node = nodeList.addAndGetNode(indexQueryRange);
+      Node<FilteredIndexRange<F, R>> node = nodeList.addAndGetNode(indexQueryRange);
       if (end != null) {
         end = node;
         minHeap.add(new ComparableNode(currentGap, node));
         // We also have one interval which is not in the heap.
         if (minHeap.size() >= maxFilteredIndexRanges) {
           ComparableNode removed = minHeap.remove();
-          SelectiveFilter<T> combinedFilter = filterCombiner.combine(removed.node.previous().get(),
+          SelectiveFilter<F> combinedFilter = filterCombiner.combine(removed.node.previous().get(),
               removed.node.get(), removed.leftGapEstimate);
           potentialOverSelectivity |= combinedFilter.isPotentialOverSelectivity();
-          removed.node.previous().set(new FilteredIndexRange<T>(
-              LongRange.of(removed.node.previous().get().getIndexRange().getStart(),
+          removed.node.previous().set(new FilteredIndexRange<F, R>(
+              rangeHome.of(removed.node.previous().get().getIndexRange().getStart(),
                   removed.node.get().getIndexRange().getEnd()), combinedFilter.getFilter(),
                   combinedFilter.isPotentialOverSelectivity() | potentialOverSelectivityInRange));
           removed.node.remove();
         }
       }
-      currentGap = 0;
+      currentGap = zero.clone();
     }
   }
 
-  private void processDisjointRegion(long gapEstimate) {
+  private void processDisjointRegion(V gapEstimate) {
     if (!nodeList.isEmpty()) {
-      currentGap += gapEstimate;
+      currentGap.add(gapEstimate);
     }
   }
 
@@ -178,7 +184,7 @@ public class BacktrackingQueryBuilder<T> implements QueryBuilder<T> {
    * Returns the query constructed so far as a random access list.
    */
   @Override
-  public Query<T> get() {
+  public Query<F, R> get() {
     /*
      * Can't return nodeList directly since it will be modified at later steps
      * if any left, and also because we want to return a random access list.
@@ -186,38 +192,43 @@ public class BacktrackingQueryBuilder<T> implements QueryBuilder<T> {
     return Query.of(ImmutableList.copyOf(nodeList));
   }
 
-  public static <T> BacktrackingQueryBuilder<T> create(
-      RegionInspector<T> regionInspector, FilterCombiner<T> intervalCombiner,
-      int maxFilteredIndexRanges, boolean removeVacuum) {
-    return new BacktrackingQueryBuilder<T>(
-        regionInspector, intervalCombiner, maxFilteredIndexRanges, removeVacuum);
+  public static <F, T, V extends Content<V>, R extends Range<T, V>> BacktrackingQueryBuilder<F, T, V, R> create(
+      RegionInspector<F, V> regionInspector, FilterCombiner<F, V, R> intervalCombiner,
+      int maxFilteredIndexRanges, boolean removeVacuum,
+      RangeHome<T, V, R> rangeHome, V zero) {
+    return new BacktrackingQueryBuilder<F, T, V, R>(
+        regionInspector, intervalCombiner, maxFilteredIndexRanges, removeVacuum,
+        rangeHome, zero);
   }
   
-  public BacktrackingQueryBuilder(RegionInspector<T> regionInspector,
-      FilterCombiner<T> intervalCombiner, int maxFilteredIndexRanges, boolean alwaysRemoveVacuum) {
+  public BacktrackingQueryBuilder(RegionInspector<F, V> regionInspector,
+      FilterCombiner<F, V, R> intervalCombiner, int maxFilteredIndexRanges,
+      boolean alwaysRemoveVacuum, RangeHome<T, V, R> rangeHome, V zero) {
     this.regionInspector = regionInspector;
     this.filterCombiner = intervalCombiner;
     Preconditions.checkArgument(
         maxFilteredIndexRanges > 0, "maxFilteredIndexRanges must be positive");
     this.maxFilteredIndexRanges = maxFilteredIndexRanges;
     this.alwaysRemoveVacuum = alwaysRemoveVacuum;
+    this.rangeHome = rangeHome;
+    this.zero = zero;
+    this.currentGap = zero.clone();
   }
   
   private class ComparableNode implements Comparable<ComparableNode> {
     
-    private final long leftGapEstimate;
-    private final Node<FilteredIndexRange<T>> node;
+    private final V leftGapEstimate;
+    private final Node<FilteredIndexRange<F, R>> node;
     
-    public ComparableNode(long leftGapEstimate, Node<FilteredIndexRange<T>> node) {
-      Preconditions.checkArgument(leftGapEstimate >= 0);
+    public ComparableNode(V leftGapEstimate, Node<FilteredIndexRange<F, R>> node) {
+//      Preconditions.checkArgument(leftGapEstimate >= 0);
       this.leftGapEstimate = leftGapEstimate;
       this.node = Preconditions.checkNotNull(node, "node");
     }
 
     @Override
     public int compareTo(ComparableNode other) {
-      // Works since both numbers are non-negative.
-      return Long.signum(leftGapEstimate - other.leftGapEstimate);
+      return leftGapEstimate.compareTo(other.leftGapEstimate);
     }
   }
 }

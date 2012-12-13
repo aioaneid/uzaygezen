@@ -19,32 +19,36 @@ package com.google.uzaygezen.core;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import com.google.common.primitives.Ints;
 
 /**
  * @author Daniel Aioanei
  */
-public class HilbertIndexMasksTest extends TestCase {
+public class HilbertIndexMasksTest {
   
-  public void testExtractMaskOneDimensionOneBit() {
+  @Test
+  public void extractMaskOneDimensionOneBit() {
     HilbertIndexMasks masks = new HilbertIndexMasks(new MultiDimensionalSpec(Arrays.asList(1)));
     BitVector mu = BitVectorFactories.OPTIMAL.apply(1);
     masks.copyMaskTo(0, 0, mu);
     BitVector expected = TestUtils.createBitVector(1, 1);
-    assertEquals(expected, mu);
+    Assert.assertEquals(expected, mu);
   }
 
-  public void testExtractMaskTwoDimensions() {
+  @Test
+  public void extractMaskTwoDimensions() {
     HilbertIndexMasks masks = new HilbertIndexMasks(new MultiDimensionalSpec(Arrays.asList(5, 4)));
     BitVector mu = BitVectorFactories.OPTIMAL.apply(2);
     masks.copyMaskTo(3, 0, mu);
     BitVector expected = TestUtils.createBitVector(3, 2);
-    assertEquals(expected, mu);
+    Assert.assertEquals(expected, mu);
   }
   
-  public void testExtractMask() {
+  @Test
+  public void extractMask() {
     List<Integer> bitsPerDimension = Arrays.asList(5, 4, 6);
     MultiDimensionalSpec spec = new MultiDimensionalSpec(bitsPerDimension);
     HilbertIndexMasks masks = new HilbertIndexMasks(spec);
@@ -53,7 +57,7 @@ public class HilbertIndexMasksTest extends TestCase {
         BitVector expected = extractMask(bitsPerDimension, i, d);
         BitVector actual = BitVectorFactories.OPTIMAL.apply(bitsPerDimension.size());
         masks.copyMaskTo(i, d, actual);
-        assertEquals(expected, actual);
+        Assert.assertEquals(expected, actual);
       }
     }
   }

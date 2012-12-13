@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.google.uzaygezen.core.ranges.LongRange;
 
 /**
  * @author Daniel Aioanei
@@ -54,6 +55,21 @@ public class TestUtils {
       ImmutableList.of(ZERO_TEN, ZERO_ONE, ZERO_TEN);
 
   public static final long SEED = computeSeed();
+  
+  private static class ImmutableLongContent extends LongContent {
+    
+    public ImmutableLongContent(long v) {
+      super(v);
+    }
+    
+    @Override
+    public void add(LongContent other) {
+      throw new IllegalStateException("Cannot modify shared instance.");
+    }
+  }
+  
+  public static final LongContent ZERO_LONG_CONTENT = new ImmutableLongContent(0);
+  public static final LongContent ONE_LONG_CONTENT = new ImmutableLongContent(1);
   
   private TestUtils() {}
   
