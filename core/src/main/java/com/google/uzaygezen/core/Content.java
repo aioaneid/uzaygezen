@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.uzaygezen.core.ranges;
-
-import java.util.List;
-
-import com.google.uzaygezen.core.Pow2LengthBitSetRange;
+package com.google.uzaygezen.core;
 
 /**
  * @author Daniel Aioanei
  */
-public interface RangeHome<T, V, R> {
+public interface Content<V> extends AdditiveValue<V> {
 
-    R of(T start, T end);
-    
-    R toRange(Pow2LengthBitSetRange bitSetRange);
-    
-    V overlap(List<R> x, List<R> y);
+  void shiftRight(int n);
+  
+  boolean isOne();
 }
