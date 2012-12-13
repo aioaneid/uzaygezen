@@ -28,7 +28,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.uzaygezen.core.ranges.Content;
 
 /**
  * Assessor of spatial relationships that first check the input into an internal

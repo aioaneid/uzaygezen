@@ -13,20 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.uzaygezen.core.ranges;
+package com.google.uzaygezen.core;
 
-import java.util.List;
-
-import com.google.uzaygezen.core.Pow2LengthBitSetRange;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Daniel Aioanei
  */
-public interface RangeHome<T, V, R> {
+public class LongContentTest {
 
-    R of(T start, T end);
-    
-    R toRange(Pow2LengthBitSetRange bitSetRange);
-    
-    V overlap(List<R> x, List<R> y);
+  @Test
+  public void shiftRightManyBitsBecomesZero() {
+    for (long v = Long.MAX_VALUE; v > 0; --v) {
+      LongContent c = new LongContent(v);
+      LongContent actual;
+      actual = c.clone();
+      actual.shiftRight(64);
+      Assert.assertTrue(actual.isZero());
+      actual = c.clone();
+      actual.shiftRight(63);
+      Assert.assertTrue(actual.isZero());
+      v /= 31;
+    }
+  }
 }
