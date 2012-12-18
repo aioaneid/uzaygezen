@@ -67,7 +67,7 @@ In either case the query region is represented by the *!RegionInspector* abstrac
 Here's a snippet of what the code could look like:
 {{{
 // int[] min, int[] max represent the query hyper-rectangle, both ends inclusive
-List<LongRange> criterion = new ArrayList<LongRange>(min.length);
+List<LongRange> criterion = new ArrayList<>(min.length);
 for (int i = 0; i < min.length; ++i) {
     criterion.add(LongRange.of(min[i], max[i] + 1));
 }
@@ -77,7 +77,7 @@ RegionInspector<Object, LongContent> simpleRegionInspector = SimpleRegionInspect
 final int maxFilteredRanges = 20;
 // PlainFilterCombiner since we're not using sub-ranges here
 PlainFilterCombiner<Object, Long, LongContent, LongRange> combiner = new PlainFilterCombiner<>(filter);
-QueryBuilder<Object, BigIntegerRange> queryBuilder = BacktrackingQueryBuilder.create(
+QueryBuilder<Object, LongRange> queryBuilder = BacktrackingQueryBuilder.create(
       regionInspector, combiner, maxRanges, true, LongRangeHome.INSTANCE, zero);
 // sfc is of type SpaceFillingCurve, such as an instance of CompactHilbertIndex
 sfc.accept(new ZoomingSpaceVisitorAdapter(sfc, queryBuilder));
