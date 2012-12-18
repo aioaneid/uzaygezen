@@ -78,7 +78,7 @@ final int maxFilteredRanges = 20;
 // PlainFilterCombiner since we're not using sub-ranges here
 PlainFilterCombiner<Object, Long, LongContent, LongRange> combiner = new PlainFilterCombiner<>(filter);
 QueryBuilder<Object, BigIntegerRange> queryBuilder = BacktrackingQueryBuilder.create(
-      regionInspector, combiner, maxRanges, true, BigIntegerRangeHome.INSTANCE, zero);
+      regionInspector, combiner, maxRanges, true, LongRangeHome.INSTANCE, zero);
 // sfc is of type SpaceFillingCurve, such as an instance of CompactHilbertIndex
 sfc.accept(new ZoomingSpaceVisitorAdapter(sfc, queryBuilder));
 Query<Object, LongRange> query = queryBuilder.get();
