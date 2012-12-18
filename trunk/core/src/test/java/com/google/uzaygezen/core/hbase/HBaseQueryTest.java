@@ -58,6 +58,7 @@ import com.google.uzaygezen.core.PlainFilterCombiner;
 import com.google.uzaygezen.core.Pow2LengthBitSetRange;
 import com.google.uzaygezen.core.Pow2LengthBitSetRangeFactory;
 import com.google.uzaygezen.core.Query;
+import com.google.uzaygezen.core.QueryBuilder;
 import com.google.uzaygezen.core.RegionInspector;
 import com.google.uzaygezen.core.SimpleRegionInspector;
 import com.google.uzaygezen.core.SpaceFillingCurve;
@@ -296,7 +297,7 @@ public class HBaseQueryTest {
     // Not using using sub-ranges here.
     PlainFilterCombiner<Object, BigInteger, BigIntegerContent, BigIntegerRange> combiner = new PlainFilterCombiner<>(
       filter);
-    BacktrackingQueryBuilder<Object, BigInteger, BigIntegerContent, BigIntegerRange> queryBuilder = BacktrackingQueryBuilder.create(
+    QueryBuilder<Object, BigIntegerRange> queryBuilder = BacktrackingQueryBuilder.create(
       regionInspector, combiner, maxRanges, true, BigIntegerRangeHome.INSTANCE, zero);
     sfc.accept(new ZoomingSpaceVisitorAdapter(sfc, queryBuilder));
     Query<Object, BigIntegerRange> query = queryBuilder.get();
