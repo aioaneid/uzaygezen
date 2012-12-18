@@ -18,6 +18,7 @@ package com.google.uzaygezen.core;
 
 import static org.junit.Assert.assertArrayEquals;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -43,22 +44,81 @@ public class BitVectorTest {
   private static final Random random = new Random(123);
 
   @Test
-  public void emptyRange() {
-    checkEmptyRange(BitVectorFactories.OPTIMAL);
-    checkEmptyRange(BitVectorFactories.SLOW);
-    checkEmptyRange(BitVectorFactories.LONG_ARRAY);
+  public void compareTo() {
+    for (Function<Integer, BitVector> factory1 : BitVectorFactories.values()) {
+      for (Function<Integer, BitVector> factory2 : BitVectorFactories.values()) {
+        checkCompareTo(factory1, factory2);
+      }
+    }
   }
   
+  private void checkCompareTo(Function<Integer, BitVector> factory1, Function<Integer, BitVector> factory2) {
+    for (int j = 0; j < 128; j++) {
+      BitVector b = factory1.apply(j);
+      boolean[] bBits = new boolean[j];
+      for (int k = 0; k < j; ++k) {
+        bBits[k] = random.nextBoolean();
+      }
+      for (int k = 0; k < j; ++k) {
+        b.set(k, bBits[k]);
+      }
+      BitVector c = factory2.apply(j);
+      boolean[] cBits = new boolean[j];
+      for (int k = 0; k < j; ++k) {
+        cBits[k] = random.nextBoolean();
+      }
+      for (int k = 0; k < j; ++k) {
+        c.set(k, cBits[k]);
+      }
+      int cmp = b.compareTo(c);
+      int k = j;
+      while (--k != -1 && bBits[k] == cBits[k]) {}
+      int expected = (k == -1) ? 0 : Boolean.compare(bBits[k], cBits[k]);
+      Assert.assertEquals(Integer.signum(expected), Integer.signum(cmp));
+      Assert.assertEquals(Integer.signum(cmp), -Integer.signum(-cmp));
+      Assert.assertEquals(Integer.signum(cmp), b.toBigInteger().compareTo(c.toBigInteger()));
+    }
+  }
+
   @Test
-  public void set() {
-    checkSet(BitVectorFactories.OPTIMAL);
-    checkSet(BitVectorFactories.SLOW);
-    checkSet(BitVectorFactories.LONG_ARRAY);
+  public void copyFromToBigInteger() {
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkCopyFromToBigInteger(factory);
+    }
+  }
+
+  private void checkCopyFromToBigInteger(Function<Integer, BitVector> factory) {
+    for (int j = 0; j < 128; j++) {
+      BitVector b = factory.apply(j);
+      boolean[] bits = new boolean[b.size()];
+      for (int k = 0; k < b.size(); ++k) {
+        bits[k] = random.nextBoolean();
+      }
+      BigInteger expected = BigInteger.ZERO;
+      for (int k = 0; k < b.size(); ++k) {
+        b.set(k, bits[k]);
+        if (bits[k]) {
+          expected = expected.setBit(k);
+        }
+      }
+      Assert.assertEquals(expected, b.toBigInteger());
+      BitVector revived = factory.apply(j);
+      revived.copyFrom(expected);
+      Assert.assertEquals(b, revived);
+    }
+  }
+
+  @Test
+  public void emptyRange() {
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkEmptyRange(factory);
+    }
   }
 
   private void checkEmptyRange(Function<Integer, BitVector> factory) {
     for (int j = 0; j < 128; j++) {
       BitVector b = factory.apply(j);
+      randomInit(b);
       BitVector expected = b.clone();
       b.clear(j, j);
       Assert.assertEquals(expected, b);
@@ -70,6 +130,19 @@ public class BitVectorTest {
       Assert.assertEquals(expected, b);
       b.set(j, j, false);
       Assert.assertEquals(expected, b);
+    }
+  }
+
+  public void randomInit(BitVector b) {
+    for (int k = 0; k < b.size(); ++k) {
+      b.set(k, random.nextBoolean());
+    }
+  }
+  
+  @Test
+  public void set() {
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkSet(factory);
     }
   }
 
@@ -85,9 +158,9 @@ public class BitVectorTest {
 
   @Test
   public void setIllegalIndex() {
-    checkSetIllegalIndex(BitVectorFactories.OPTIMAL);
-    checkSetIllegalIndex(BitVectorFactories.SLOW);
-    checkSetIllegalIndex(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkSetIllegalIndex(factory);
+    }
   }
 
   private void checkSetIllegalIndex(Function<Integer, BitVector> factory) {
@@ -136,9 +209,9 @@ public class BitVectorTest {
   }
 
   public void setAllBitsToSize() {
-    checkSetAllBitsToSize(BitVectorFactories.OPTIMAL);
-    checkSetAllBitsToSize(BitVectorFactories.SLOW);
-    checkSetAllBitsToSize(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkSetAllBitsToSize(factory);
+    }
   }
 
   private void checkSetAllBitsToSize(Function<Integer, BitVector> factory) {
@@ -151,9 +224,9 @@ public class BitVectorTest {
 
   @Test
   public void clearAll() {
-    checkClearAll(BitVectorFactories.OPTIMAL);
-    checkClearAll(BitVectorFactories.SLOW);
-    checkClearAll(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkClearAll(factory);
+    }
   }
 
   private void checkClearAll(Function<Integer, BitVector> factory) {
@@ -174,9 +247,9 @@ public class BitVectorTest {
 
   @Test
   public void clear() {
-    checkClear(BitVectorFactories.OPTIMAL);
-    checkClear(BitVectorFactories.SLOW);
-    checkClear(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkClear(factory);
+    }
   }
 
   private void checkClear(Function<Integer, BitVector> factory) {
@@ -187,9 +260,9 @@ public class BitVectorTest {
 
   @Test
   public void toLong() {
-    checkToLong(BitVectorFactories.OPTIMAL);
-    checkToLong(BitVectorFactories.SLOW);
-    checkToLong(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkToLong(factory);
+    }
   }
 
   private void checkToLong(Function<Integer, BitVector> factory) {
@@ -208,9 +281,9 @@ public class BitVectorTest {
 
   @Test
   public void copyFrom() {
-    checkCopyFrom(BitVectorFactories.OPTIMAL);
-    checkCopyFrom(BitVectorFactories.SLOW);
-    checkCopyFrom(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkCopyFrom(factory);
+    }
   }
   
   private void checkCopyFrom(Function<Integer, BitVector> factory) {
@@ -235,9 +308,9 @@ public class BitVectorTest {
 
   @Test
   public void copyFromBigEndian64Bits() {
-    checkCopyFromBigEndian64Bits(BitVectorFactories.OPTIMAL);
-    checkCopyFromBigEndian64Bits(BitVectorFactories.SLOW);
-    checkCopyFromBigEndian64Bits(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkCopyFromBigEndian64Bits(factory);
+    }
   }
 
   private void checkCopyFromBigEndian64Bits(
@@ -270,9 +343,9 @@ public class BitVectorTest {
 
   @Test
   public void length() {
-    checkLength(BitVectorFactories.OPTIMAL);
-    checkLength(BitVectorFactories.SLOW);
-    checkLength(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkLength(factory);
+    }
   }
 
   private void checkLength(Function<Integer, BitVector> factory) {
@@ -289,9 +362,9 @@ public class BitVectorTest {
 
   @Test
   public void clearRange() {
-    checkClearRange(BitVectorFactories.OPTIMAL);
-    checkClearRange(BitVectorFactories.SLOW);
-    checkClearRange(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkClearRange(factory);
+    }
   }
 
   private void checkClearRange(Function<Integer, BitVector> factory) {
@@ -327,9 +400,9 @@ public class BitVectorTest {
 
   @Test
   public void setRange() {
-    checkSetRange(BitVectorFactories.OPTIMAL);
-    checkSetRange(BitVectorFactories.SLOW);
-    checkSetRange(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkSetRange(factory);
+    }
   }
 
   private void checkSetRange(Function<Integer, BitVector> factory) {
@@ -360,9 +433,9 @@ public class BitVectorTest {
 
   @Test
   public void flip() {
-    checkFlip(BitVectorFactories.OPTIMAL);
-    checkFlip(BitVectorFactories.SLOW);
-    checkFlip(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkFlip(factory);
+    }
   }
 
   private void checkFlip(Function<Integer, BitVector> factory) {
@@ -378,9 +451,9 @@ public class BitVectorTest {
 
   @Test
   public void flipRange() {
-    checkFlipRange(BitVectorFactories.OPTIMAL);
-    checkFlipRange(BitVectorFactories.SLOW);
-    checkFlipRange(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkFlipRange(factory);
+    }
   }
 
   private void checkFlipRange(Function<Integer, BitVector> factory) {
@@ -423,9 +496,9 @@ public class BitVectorTest {
 
   @Test
   public void get() {
-    checkGet(BitVectorFactories.OPTIMAL);
-    checkGet(BitVectorFactories.SLOW);
-    checkGet(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGet(factory);
+    }
   }
 
   private void checkGet(Function<Integer, BitVector> factory) {
@@ -449,9 +522,9 @@ public class BitVectorTest {
 
   @Test
   public void and() {
-    checkAnd(BitVectorFactories.OPTIMAL);
-    checkAnd(BitVectorFactories.SLOW);
-    checkAnd(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkAnd(factory);
+    }
   }
 
   private void checkAnd(Function<Integer, BitVector> factory) {
@@ -480,9 +553,9 @@ public class BitVectorTest {
 
   @Test
   public void andNotForSizeZero() {
-    checkAndNotForSizeZero(BitVectorFactories.OPTIMAL);
-    checkAndNotForSizeZero(BitVectorFactories.SLOW);
-    checkAndNotForSizeZero(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkAndNotForSizeZero(factory);
+    }
   }
 
   private void checkAndNotForSizeZero(Function<Integer, BitVector> factory) {
@@ -494,9 +567,9 @@ public class BitVectorTest {
 
   @Test
   public void orForSizeZero() {
-    checkOrForSizeZero(BitVectorFactories.OPTIMAL);
-    checkOrForSizeZero(BitVectorFactories.SLOW);
-    checkOrForSizeZero(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkOrForSizeZero(factory);
+    }
   }
 
   private void checkOrForSizeZero(Function<Integer, BitVector> factory) {
@@ -508,9 +581,9 @@ public class BitVectorTest {
 
   @Test
   public void xorForSizeZero() {
-    checkXorForSizeZero(BitVectorFactories.OPTIMAL);
-    checkXorForSizeZero(BitVectorFactories.SLOW);
-    checkXorForSizeZero(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkXorForSizeZero(factory);
+    }
   }
 
   private void checkXorForSizeZero(Function<Integer, BitVector> factory) {
@@ -522,9 +595,9 @@ public class BitVectorTest {
 
   @Test
   public void getNextClearBit() {
-    checkGetNextClearBit(BitVectorFactories.OPTIMAL);
-    checkGetNextClearBit(BitVectorFactories.SLOW);
-    checkGetNextClearBit(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGetNextClearBit(factory);
+    }
   }
 
   private void checkGetNextClearBit(Function<Integer, BitVector> factory) {
@@ -539,9 +612,9 @@ public class BitVectorTest {
 
   @Test
   public void getNextSetBit() {
-    checkGetNextSetBit(BitVectorFactories.OPTIMAL);
-    checkGetNextSetBit(BitVectorFactories.SLOW);
-    checkGetNextSetBit(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGetNextSetBit(factory);
+    }
   }
 
   private void checkGetNextSetBit(Function<Integer, BitVector> factory) {
@@ -557,9 +630,9 @@ public class BitVectorTest {
 
   @Test
   public void rotateAllZerosAndAllOnes() {
-    checkRotateAllZeroesAndAllOnes(BitVectorFactories.OPTIMAL);
-    checkRotateAllZeroesAndAllOnes(BitVectorFactories.SLOW);
-    checkRotateAllZeroesAndAllOnes(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkRotateAllZeroesAndAllOnes(factory);
+    }
   }
 
   private void checkRotateAllZeroesAndAllOnes(Function<Integer, BitVector> factory) {
@@ -582,9 +655,9 @@ public class BitVectorTest {
 
   @Test
   public void rotate() {
-    checkRotate(BitVectorFactories.OPTIMAL);
-    checkRotate(BitVectorFactories.SLOW);
-    checkRotate(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkRotate(factory);
+    }
   }
 
   private void checkRotate(Function<Integer, BitVector> factory) {
@@ -624,9 +697,9 @@ public class BitVectorTest {
 
   @Test
   public void grayCode() {
-    checkGrayCode(BitVectorFactories.OPTIMAL);
-    checkGrayCode(BitVectorFactories.SLOW);
-    checkGrayCode(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGrayCode(factory);
+    }
   }
 
   private void checkGrayCode(Function<Integer, BitVector> factory) {
@@ -648,9 +721,7 @@ public class BitVectorTest {
         checkGrayCode(b);
       }
       for (int j = 0; j < 1000; ++j) {
-        for (int k = 0; k < b.size(); ++k) {
-          b.set(k, random.nextBoolean());
-        }
+        randomInit(b);
         checkGrayCode(b);
       }
     }
@@ -667,9 +738,9 @@ public class BitVectorTest {
 
   @Test
   public void grayCodeInverse() {
-    checkGrayCodeInverse(BitVectorFactories.OPTIMAL);
-    checkGrayCodeInverse(BitVectorFactories.SLOW);
-    checkGrayCodeInverse(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGrayCodeInverse(factory);
+    }
   }
 
   private void checkGrayCodeInverse(Function<Integer, BitVector> factory) {
@@ -692,9 +763,7 @@ public class BitVectorTest {
         checkGrayCodeInverse(b);
       }
       for (int j = 0; j < 1000; ++j) {
-        for (int k = 0; k < b.size(); ++k) {
-          b.set(k, random.nextBoolean());
-        }
+        randomInit(b);
         checkGrayCodeInverse(b);
       }
     }
@@ -752,9 +821,9 @@ public class BitVectorTest {
   
   @Test
   public void smallerEvenAndGrayCode() {
-    checkEntryVertex(BitVectorFactories.SLOW);
-    checkEntryVertex(BitVectorFactories.OPTIMAL);
-    checkEntryVertex(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkEntryVertex(factory);
+    }
   }
 
   private void checkEntryVertex(Function<Integer, BitVector> factory) {
@@ -775,9 +844,9 @@ public class BitVectorTest {
 
   @Test
   public void smallerEvenAndGrayCodeForTwoBits() {
-    checkEntryVertexForTwoDimensions(BitVectorFactories.SLOW);
-    checkEntryVertexForTwoDimensions(BitVectorFactories.OPTIMAL);
-    checkEntryVertexForTwoDimensions(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkEntryVertexForTwoDimensions(factory);
+    }
   }
   
   /**
@@ -801,9 +870,9 @@ public class BitVectorTest {
   
   @Test
   public void grayCodeRankWithAllFreeBitsIsIdentityFunction() {
-    checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(BitVectorFactories.SLOW);
-    checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(BitVectorFactories.OPTIMAL);
-    checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(factory);
+    }
   }
 
   private void checkGrayCodeRankWithAllFreeBitsIsIdentityFunction(
@@ -838,9 +907,9 @@ public class BitVectorTest {
 
   @Test
   public void grayCodeRankRemovesConstrainedBits() {
-    checkGrayCodeRankRemovesConstrainedBits(BitVectorFactories.SLOW);
-    checkGrayCodeRankRemovesConstrainedBits(BitVectorFactories.OPTIMAL);
-    checkGrayCodeRankRemovesConstrainedBits(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGrayCodeRankRemovesConstrainedBits(factory);
+    }
   }
   
   public void checkGrayCodeRankRemovesConstrainedBits(
@@ -863,9 +932,9 @@ public class BitVectorTest {
 
   @Test
   public void grayCodeRankIsPlainPatternRank() {
-    checkGrayCodeRankIsPlainPatternRank(BitVectorFactories.SLOW);
-    checkGrayCodeRankIsPlainPatternRank(BitVectorFactories.OPTIMAL);
-    checkGrayCodeRankIsPlainPatternRank(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGrayCodeRankIsPlainPatternRank(factory);
+    }
   }
   
   /**
@@ -901,9 +970,9 @@ public class BitVectorTest {
 
   @Test
   public void bigGrayCodeRankAndInverse() {
-    checkBigGrayCodeRankAndInverse(BitVectorFactories.SLOW);
-    checkBigGrayCodeRankAndInverse(BitVectorFactories.OPTIMAL);
-    checkBigGrayCodeRankAndInverse(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkBigGrayCodeRankAndInverse(factory);
+    }
   }
 
   public void checkBigGrayCodeRankAndInverse(Function<Integer, BitVector> factory) {
@@ -928,9 +997,9 @@ public class BitVectorTest {
   
   @Test
   public void grayCodeRankInverse() {
-    checkGrayCodeRankInverse(BitVectorFactories.SLOW);
-    checkGrayCodeRankInverse(BitVectorFactories.OPTIMAL);
-    checkGrayCodeRankInverse(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkGrayCodeRankInverse(factory);
+    }
   }
   
   private static void checkGrayCodeRankInverse(Function<Integer, BitVector> factory) {
@@ -979,9 +1048,9 @@ public class BitVectorTest {
   
   @Test
   public void firstDifferentLowestBitCount() {
-    checkIntraSubHypercubeDirection(BitVectorFactories.SLOW);
-    checkIntraSubHypercubeDirection(BitVectorFactories.OPTIMAL);
-    checkIntraSubHypercubeDirection(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkIntraSubHypercubeDirection(factory);
+    }
   }
   
   public void checkIntraSubHypercubeDirection(Function<Integer, BitVector> factory) {
@@ -1008,9 +1077,9 @@ public class BitVectorTest {
 
   @Test
   public void areAllLowestBitsClear() {
-    checkAreAllLowestBitsClear(BitVectorFactories.SLOW);
-    checkAreAllLowestBitsClear(BitVectorFactories.OPTIMAL);
-    checkAreAllLowestBitsClear(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkAreAllLowestBitsClear(factory);
+    }
   }
   
   private void checkAreAllLowestBitsClear(Function<Integer, BitVector> factory) {
@@ -1030,9 +1099,9 @@ public class BitVectorTest {
 
   @Test
   public void lowestDifferentBitForTwoDimensions() {
-    checkIntraSubHypercubeDirectionForTwoDimensions(BitVectorFactories.SLOW);
-    checkIntraSubHypercubeDirectionForTwoDimensions(BitVectorFactories.OPTIMAL);
-    checkIntraSubHypercubeDirectionForTwoDimensions(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkIntraSubHypercubeDirectionForTwoDimensions(factory);
+    }
   }
   
   /**
@@ -1055,9 +1124,9 @@ public class BitVectorTest {
   
   @Test
   public void copySectionFrom() {
-    checkCopySectionFrom(BitVectorFactories.SLOW);
-    checkCopySectionFrom(BitVectorFactories.OPTIMAL);
-    checkCopySectionFrom(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkCopySectionFrom(factory);
+    }
   }
   
   private void checkCopySectionFrom(Function<Integer, BitVector> factory) {
@@ -1088,41 +1157,41 @@ public class BitVectorTest {
 
   @Test
   public void toLongArrayForSingleWord() {
-    checkToLongArrayForSingleWord(BitVectorFactories.SLOW);
-    checkToLongArrayForSingleWord(BitVectorFactories.OPTIMAL);
-    checkToLongArrayForSingleWord(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkToLongArrayForSingleWord(factory);
+    }
   }
 
   @Test
   public void toLongArrayForTwoWords() {
-    checkToLongArrayForTwoWords(BitVectorFactories.SLOW);
-    checkToLongArrayForTwoWords(BitVectorFactories.OPTIMAL);
-    checkToLongArrayForTwoWords(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkToLongArrayForTwoWords(factory);
+    }
   }
   
   @Test
   public void toBigEndianByteArrayForSingleWord() {
-    checkToBigEndianByteArrayForSingleWord(BitVectorFactories.SLOW);
-    checkToBigEndianByteArrayForSingleWord(BitVectorFactories.OPTIMAL);
-    checkToBigEndianByteArrayForSingleWord(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkToBigEndianByteArrayForSingleWord(factory);
+    }
   }
 
   @Test
   public void toBigEndianByteArrayForTwoWords() {
-    checkToBigEndianByteArrayForTwoWords(BitVectorFactories.SLOW);
-    checkToBigEndianByteArrayForTwoWords(BitVectorFactories.OPTIMAL);
-    checkToBigEndianByteArrayForTwoWords(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkToBigEndianByteArrayForTwoWords(factory);
+    }
   }
 
   @Test
   public void toBigEndianByteArrayAndCopyFromBigEndianAreInverse() {
-    checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.SLOW);
-    checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.OPTIMAL);
-    checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(factory);
+    }
   }
 
   private void checkToBigEndianByteArrayAndCopyFromBigEndianAreInverse(
-      BitVectorFactories factory) {
+      Function<Integer, BitVector> factory) {
     Random random = new Random(TestUtils.SEED);
     for (int sizeUpperLimit = 0; sizeUpperLimit < 128; ++sizeUpperLimit) {
       byte[] array = new byte[sizeUpperLimit];
@@ -1256,9 +1325,9 @@ public class BitVectorTest {
  
   @Test
   public void copyFromLongArray() {
-    checkCopyFromLongArray(BitVectorFactories.SLOW);
-    checkCopyFromLongArray(BitVectorFactories.OPTIMAL);
-    checkCopyFromLongArray(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkCopyFromLongArray(factory);
+    }
   }
   
   private void checkCopyFromLongArray(Function<Integer, BitVector> factory) {
@@ -1275,9 +1344,9 @@ public class BitVectorTest {
   }
   
   public static void testIncrementReturnValue() {
-    checkIncrementReturnValue(BitVectorFactories.OPTIMAL);
-    checkIncrementReturnValue(BitVectorFactories.SLOW);
-    checkIncrementReturnValue(BitVectorFactories.LONG_ARRAY);
+    for (Function<Integer, BitVector> factory : BitVectorFactories.values()) {
+      checkIncrementReturnValue(factory);
+    }
   }
 
   private static void checkIncrementReturnValue(Function<Integer, BitVector> factory) {

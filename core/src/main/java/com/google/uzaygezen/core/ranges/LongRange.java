@@ -26,9 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.uzaygezen.core.LongContent;
 
 /**
- * Non-empty interval with non-negative {@code long} inclusive start and
- * exclusive end.
- * 
  * TODO: Check for overflow in the long calculations.
  *
  * @author Daniel Aioanei
@@ -47,19 +44,20 @@ public class LongRange implements Range<Long, LongContent> {
     this.end = end;
   }
 
-  /**
-   * @return the inclusive start of the interval
-   */
+  @Override
   public Long getStart() {
     return start;
   }
 
-  /**
-   * @return the exclusive end of the interval
-   */
+  @Override
   public Long getEnd() {
     return end;
   }
+  
+  @Override
+  public boolean contains(Long point) {
+    return start <= point & end > point;
+  }  
   
   public LongContent length() {
     return new LongContent(end - start);
@@ -77,11 +75,11 @@ public class LongRange implements Range<Long, LongContent> {
    * @return the size of the overlapping area
    */
   long overlap(LongRange other) {
-    if (start >= other.end || end <= other.start) {
+    if (start >= other.end | end <= other.start) {
       return 0;
     } else {
       // At this point they definitely have something in common.
-      if (start < other.start || end > other.end) {
+      if (start < other.start | end > other.end) {
         return Math.min(end, other.end) - Math.max(start, other.start);
       } else {
         return end - start;
@@ -104,7 +102,7 @@ public class LongRange implements Range<Long, LongContent> {
     Preconditions.checkArgument(y.size() == n, "x and y must have the same size.");
     long overlap = 1;
     // Stop early if overlap.signum() becomes zero.
-    for (int i = 0; i < n && overlap != 0; ++i) {
+    for (int i = 0; i < n & overlap != 0; ++i) {
       LongRange xRange = x.get(i);
       LongRange yRange = y.get(i);
       overlap *= xRange.overlap(yRange);
@@ -129,23 +127,5 @@ public class LongRange implements Range<Long, LongContent> {
     }
     LongRange other = (LongRange) obj;
     return start == other.start && end == other.end;
-  }
-
-  public static boolean contains(List<LongRange> orthotope, List<Long> point) {
-    final int n = point.size();
-    Preconditions.checkArgument(orthotope.size() == point.size(), "dimensionality mismatch");
-    for (int i = 0; i < n; ++i) {
-      if (!orthotope.get(i).contains(point.get(i))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Visible for testing.
-   */
-  boolean contains(long point) {
-    return start <= point && end > point;
   }
 }

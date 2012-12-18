@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 
 /**
@@ -240,6 +241,12 @@ public interface BitVector extends Comparable<BitVector> {
   long[] toLongArray();
   
   byte[] toBigEndianByteArray();
+
+  /**
+   * While {{@link #toLong()} can return a negative long, {{@link #toBigInteger()}
+   * always produces a nonnegative value.
+   */
+  BigInteger toBigInteger();
   
   /**
    * Makes this bit vector have the same bit pattern as the little-endian
@@ -249,8 +256,16 @@ public interface BitVector extends Comparable<BitVector> {
    */
   void copyFrom(long[] array);
   
+  /**
+   * Makes this bit vector have the same bit pattern as the little-endian
+   * long array, size permitting.
+   * 
+   * @param array must have length {@code (size() + 7) / 8}
+   */
   void copyFromBigEndian(byte[] array);
-  
+
+  void copyFrom(BigInteger s);
+
   /**
    * @return {@code size() + 31 * toBitSet().hashCode()}
    */
@@ -266,7 +281,8 @@ public interface BitVector extends Comparable<BitVector> {
   
   /**
    * Compares the unsigned numbers having the pattern in this and the other bit
-   * vectors, respectively, as the little endian representation.
+   * vectors, respectively, as the little endian representation. The result has
+   * the same sign as {@code toBigInteger().compareTo(o.toBigInteger())}.
    * 
    * @throws IllegalArgumentException when {@code size() != o.size()}
    */

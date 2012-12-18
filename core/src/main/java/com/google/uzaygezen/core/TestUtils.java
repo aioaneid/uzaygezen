@@ -20,9 +20,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.List;
 
-import com.google.common.collect.ImmutableList;
 import com.google.uzaygezen.core.ranges.LongRange;
 
 /**
@@ -32,12 +30,8 @@ public class TestUtils {
   
   public static final LongRange ZERO_ONE = LongRange.of(0, 1);
   public static final LongRange ZERO_TWO = LongRange.of(0, 2);
-  public static final LongRange ZERO_THREE = LongRange.of(0, 3);
   public static final LongRange ZERO_FOUR = LongRange.of(0, 4);
-  public static final LongRange ZERO_EIGHT = LongRange.of(0, 8);
   public static final LongRange ZERO_TEN = LongRange.of(0, 10);
-  public static final LongRange ZERO_THIRTY_TWO = LongRange.of(0, 32);
-  public static final LongRange ONE_TWO = LongRange.of(1, 2);
   public static final LongRange ONE_TEN = LongRange.of(1, 10);
   public static final LongRange TWO_FOUR = LongRange.of(2, 4);
   public static final LongRange TWO_SIX = LongRange.of(2, 6);
@@ -49,11 +43,6 @@ public class TestUtils {
   public static final LongRange SIX_TEN = LongRange.of(6, 10);
   public static final LongRange EIGHT_TEN = LongRange.of(8, 10);
   
-  public static final List<LongRange> ZERO_ONE_ZERO_TEN_ONE_TEN =
-      ImmutableList.of(ZERO_ONE, ZERO_TEN, ONE_TEN);
-  public static final List<LongRange> ZERO_TEN_ZERO_ONE_ZERO_TEN =
-      ImmutableList.of(ZERO_TEN, ZERO_ONE, ZERO_TEN);
-
   public static final long SEED = computeSeed();
   
   private static class ImmutableLongContent extends LongContent {

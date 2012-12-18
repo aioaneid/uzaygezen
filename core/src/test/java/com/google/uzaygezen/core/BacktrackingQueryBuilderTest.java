@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -23,10 +24,14 @@ import java.util.logging.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.uzaygezen.core.ranges.LongRange;
+import com.google.uzaygezen.core.ranges.BigIntegerContent;
+import com.google.uzaygezen.core.ranges.BigIntegerRangeHome;
 import com.google.uzaygezen.core.ranges.LongRangeHome;
+import com.google.uzaygezen.core.ranges.Range;
+import com.google.uzaygezen.core.ranges.RangeHome;
 
 /**
  * @author Daniel Aioanei
@@ -67,203 +72,304 @@ public class BacktrackingQueryBuilderTest {
   private static final List<Pow2LengthBitSetRange> ZERO_ONE_ONE_TWO_TWO_FOUR = ImmutableList.of(
     ZERO_ONE, ONE_TWO, TWO_FOUR);
 
+  private static Function<Long, Long> longFactory = Functions.identity();
+
+  private static Function<Long, LongContent> longContentFactory = new Function<Long, LongContent>() {
+    public LongContent apply(Long input) {
+      return new LongContent(input);
+    }
+  };
+
+  private static Function<Long, BigInteger> bigIntegerFactory = new Function<Long, BigInteger>() {
+    @Override
+    public BigInteger apply(Long input) {
+      return BigInteger.valueOf(input);
+    }
+  };
+
+  private static Function<Long, BigIntegerContent> bigIntegerContentFactory = new Function<Long, BigIntegerContent>() {
+    public BigIntegerContent apply(Long input) {
+      return new BigIntegerContent(BigInteger.valueOf(input));
+    }
+  };
+
   @Test
   public void queryBuilderForSingleSubRegionQueryEnoughRanges() {
-    List<List<LongRange>> queryRegion = ImmutableList.of(TestUtils.ZERO_ONE_ZERO_TEN_ONE_TEN);
-    RegionInspector<RangeListFilter<Long, LongContent, LongRange>, LongContent> regionInspector = SimpleRegionInspector.create(
-      queryRegion, TestUtils.ONE_LONG_CONTENT,
-      RangeListFilter.creator(Level.FINE, LongRangeHome.INSTANCE), LongRangeHome.INSTANCE,
-      TestUtils.ZERO_LONG_CONTENT);
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> intervalCombiner = ListConcatCombiner.unbounded();
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = BacktrackingQueryBuilder.create(
-      regionInspector, intervalCombiner, 1, true, LongRangeHome.INSTANCE,
-      TestUtils.ZERO_LONG_CONTENT);
+    checkQueryBuilderForSingleSubRegionQueryEnoughRanges(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkQueryBuilderForSingleSubRegionQueryEnoughRanges(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkQueryBuilderForSingleSubRegionQueryEnoughRanges(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    List<ImmutableList<R>> queryRegion = ImmutableList.of(ImmutableList.of(
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(1L)),
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(10L)),
+      rangeHome.of(tFactory.apply(1L), tFactory.apply(10L))));
+    RegionInspector<RangeListFilter<T, V, R>, V> regionInspector = SimpleRegionInspector.create(
+      queryRegion, vFactory.apply(1L), RangeListFilter.creator(Level.FINE, rangeHome), rangeHome,
+      vFactory.apply(0L));
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> intervalCombiner = ListConcatCombiner.unbounded();
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = BacktrackingQueryBuilder.create(
+      regionInspector, intervalCombiner, 1, true, rangeHome, vFactory.apply(0L));
     Assert.assertEquals(Query.emptyQuery(), queryBuilder.get());
     /*
      * In practice the indexRange will be different every time, but as long as
      * the are not COVERED, it doesn't really matter since we specify
      * canRelyOnIndex=false to the region inspector.
      */
-    Assert.assertTrue(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 9), 9),
-      ZERO_EIGHT_ZERO_EIGHT_ZERO_EIGHT));
+    Assert.assertTrue(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(0, 9), 9), ZERO_EIGHT_ZERO_EIGHT_ZERO_EIGHT));
     Assert.assertEquals(Query.emptyQuery(), queryBuilder.get());
-    Assert.assertTrue(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 9), 6), ZERO_ONE_ZERO_EIGHT_ZERO_EIGHT));
+    Assert.assertTrue(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(0, 9), 6), ZERO_ONE_ZERO_EIGHT_ZERO_EIGHT));
     Assert.assertEquals(Query.emptyQuery(), queryBuilder.get());
-    Assert.assertTrue(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 9), 6), ZERO_ONE_ZERO_EIGHT_ZERO_EIGHT));
+    Assert.assertTrue(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(0, 9), 6), ZERO_ONE_ZERO_EIGHT_ZERO_EIGHT));
     Assert.assertEquals(Query.emptyQuery(), queryBuilder.get());
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 9), 5), ZERO_ONE_ZERO_EIGHT_FOUR_EIGHT));
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(0, 9), 5), ZERO_ONE_ZERO_EIGHT_FOUR_EIGHT));
     Assert.assertEquals(Query.of(ImmutableList.of(FilteredIndexRange.of(
-      TestUtils.ZERO_THIRTY_TWO, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ZERO_THIRTY_TWO), false, Level.FINE, LongRangeHome.INSTANCE),
-      false))), queryBuilder.get());
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(32L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(32L))), false, Level.FINE,
+        rangeHome), false))), queryBuilder.get());
   }
 
   @Test
   public void oneOrthotopeTwoMaxRangesThresholdNotExceeded() {
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = createBuilderAndVisit010101(
-      combiner, 2, false);
-    Assert.assertEquals(
-      Query.of(ImmutableList.of(FilteredIndexRange.of(
-        TestUtils.ZERO_ONE, new RangeListFilter<>(
-          ImmutableList.<LongRange>of(TestUtils.ZERO_ONE), false, Level.FINE,
-          LongRangeHome.INSTANCE), false))), queryBuilder.get());
+    checkOneOrthotopeTwoMaxRangesThresholdNotExceeded(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkOneOrthotopeTwoMaxRangesThresholdNotExceeded(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkOneOrthotopeTwoMaxRangesThresholdNotExceeded(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> combiner = ListConcatCombiner.unbounded();
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = createBuilderAndVisit010101(
+      combiner, tFactory, rangeHome, vFactory, 2, false);
+    Assert.assertEquals(Query.of(ImmutableList.of(FilteredIndexRange.of(
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(1L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(1L))), false, Level.FINE,
+        rangeHome), false))), queryBuilder.get());
   }
 
   @Test
   public void coveredReturnedInsteadOfOverlapsWhenMaxZoomingLevelIsReached() {
-    List<List<LongRange>> queryRegion = ImmutableList.of((List<LongRange>) ImmutableList.of(TestUtils.SIX_SEVEN));
-    RegionInspector<RangeListFilter<Long, LongContent, LongRange>, LongContent> regionInspector = SimpleRegionInspector.create(
-      queryRegion, new LongContent(11),
-      RangeListFilter.creator(Level.FINE, LongRangeHome.INSTANCE), LongRangeHome.INSTANCE,
-      TestUtils.ZERO_LONG_CONTENT);
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = BacktrackingQueryBuilder.create(
-      regionInspector, combiner, Integer.MAX_VALUE, true, LongRangeHome.INSTANCE,
-      TestUtils.ZERO_LONG_CONTENT);
+    checkCoveredReturnedInsteadOfOverlapsWhenMaxZoomingLevelIsReached(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkCoveredReturnedInsteadOfOverlapsWhenMaxZoomingLevelIsReached(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkCoveredReturnedInsteadOfOverlapsWhenMaxZoomingLevelIsReached(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    List<ImmutableList<R>> queryRegion = ImmutableList.of(ImmutableList.of(rangeHome.of(
+      tFactory.apply(6L), tFactory.apply(7L))));
+    RegionInspector<RangeListFilter<T, V, R>, V> regionInspector = SimpleRegionInspector.create(
+      queryRegion, vFactory.apply(11L), RangeListFilter.creator(Level.FINE, rangeHome), rangeHome,
+      vFactory.apply(0L));
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> combiner = ListConcatCombiner.unbounded();
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = BacktrackingQueryBuilder.create(
+      regionInspector, combiner, Integer.MAX_VALUE, true, rangeHome, vFactory.apply(0L));
     Assert.assertEquals(Query.emptyQuery(), queryBuilder.get());
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 9), 3), ImmutableList.of(ZERO_EIGHT)));
-    Assert.assertEquals(
-      Query.of(ImmutableList.of(FilteredIndexRange.of(TestUtils.ZERO_EIGHT, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ZERO_EIGHT), false, Level.FINE, LongRangeHome.INSTANCE), true))),
-      queryBuilder.get());
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(0, 9), 3), ImmutableList.of(ZERO_EIGHT)));
+    Assert.assertEquals(Query.of(ImmutableList.of(FilteredIndexRange.of(
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(8L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(8L))), false, Level.FINE,
+        rangeHome), true))), queryBuilder.get());
   }
 
   @Test
   public void twoOrthotopeTwoMaxRangesThresholdNotExceeded() {
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = createBuilderAndVisit010101(
-      combiner, 2, false);
+    checkTwoOrthotopeTwoMaxRangesThresholdNotExceeded(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkTwoOrthotopeTwoMaxRangesThresholdNotExceeded(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkTwoOrthotopeTwoMaxRangesThresholdNotExceeded(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> combiner = ListConcatCombiner.unbounded();
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = createBuilderAndVisit010101(
+      combiner, tFactory, rangeHome, vFactory, 2, false);
     visit0101110(queryBuilder);
-    List<FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange>> expected = new ArrayList<>();
+    List<FilteredIndexRange<RangeListFilter<T, V, R>, R>> expected = new ArrayList<>();
     expected.add(FilteredIndexRange.of(
-      TestUtils.ZERO_ONE, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ZERO_ONE), false, Level.FINE, LongRangeHome.INSTANCE), false));
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(1L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(1L))), false, Level.FINE,
+        rangeHome), false));
     expected.add(FilteredIndexRange.of(
-      TestUtils.ONE_TWO, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ONE_TWO), false, Level.FINE, LongRangeHome.INSTANCE), false));
+      rangeHome.of(tFactory.apply(1L), tFactory.apply(2L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(1L), tFactory.apply(2L))), false, Level.FINE,
+        rangeHome), false));
     Assert.assertEquals(Query.of(expected), queryBuilder.get());
   }
 
   @Test
   public void twoOrthotopeTwoMaxRangesMaxFilteredRangesExceededAndThresholdExceeded() {
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> concatCombiner = new ListConcatCombiner<>(
-      1);
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = createBuilderAndVisit010101(
-      concatCombiner, 1, false);
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(1, 9), 0),
-      ImmutableList.of(ZERO_ONE, TWO_THREE, FOUR_FIVE)));
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(2, 9), 0), ZERO_ONE_ZERO_ONE_ZERO_ONE));
-    List<FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange>> expected = Lists.newArrayList();
+    checkTwoOrthotopeTwoMaxRangesMaxFilteredRangesExceededAndThresholdExceeded(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkTwoOrthotopeTwoMaxRangesMaxFilteredRangesExceededAndThresholdExceeded(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkTwoOrthotopeTwoMaxRangesMaxFilteredRangesExceededAndThresholdExceeded(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> concatCombiner = new ListConcatCombiner<>(1);
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = createBuilderAndVisit010101(
+      concatCombiner, tFactory, rangeHome, vFactory, 1, false);
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(1, 9), 0), ImmutableList.of(ZERO_ONE, TWO_THREE, FOUR_FIVE)));
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(2, 9), 0), ZERO_ONE_ZERO_ONE_ZERO_ONE));
+    List<FilteredIndexRange<RangeListFilter<T, V, R>, R>> expected = new ArrayList<>();
     expected.add(FilteredIndexRange.of(
-      TestUtils.ZERO_THREE, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ZERO_THREE), true, Level.FINE, LongRangeHome.INSTANCE), true));
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(3L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(3L))), true, Level.FINE,
+        rangeHome), true));
     Assert.assertEquals(Query.of(expected), queryBuilder.get());
   }
 
   @Test
   public void threeOrthotopesLargeMaxRanges() {
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = createBuilderAndVisit010101(
-      combiner, Integer.MAX_VALUE, true);
+    checkThreeOrthotopesLargeMaxRanges(longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkThreeOrthotopesLargeMaxRanges(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkThreeOrthotopesLargeMaxRanges(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> combiner = ListConcatCombiner.unbounded();
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = createBuilderAndVisit010101(
+      combiner, tFactory, rangeHome, vFactory, Integer.MAX_VALUE, true);
     visit0101110(queryBuilder);
     // Insert a 10 gap.
     visit011327(queryBuilder);
     visit1100101(queryBuilder);
     // The first 2 intervals have been joined since they had a zero gap.
-    List<FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange>> expectedList = Lists.newArrayList();
+    List<FilteredIndexRange<RangeListFilter<T, V, R>, R>> expectedList = new ArrayList<>();
     expectedList.add(FilteredIndexRange.of(
-      TestUtils.ZERO_TWO, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ZERO_TWO), false, Level.FINE, LongRangeHome.INSTANCE), false));
-    expectedList.add(FilteredIndexRange.of(TestUtils.FOUR_EIGHT, new RangeListFilter<>(
-      ImmutableList.of(TestUtils.FOUR_EIGHT), false, Level.FINE, LongRangeHome.INSTANCE), false));
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(2L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(2L))), false, Level.FINE,
+        rangeHome), false));
+    expectedList.add(FilteredIndexRange.of(
+      rangeHome.of(tFactory.apply(4L), tFactory.apply(8L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(4L), tFactory.apply(8L))), false, Level.FINE,
+        rangeHome), false));
     Assert.assertEquals(Query.of(expectedList), queryBuilder.get());
   }
 
-  private void visit011327(
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder) {
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(2, 9), 1), ZERO_ONE_ONE_TWO_TWO_FOUR));
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void visit011327(
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder) {
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(2, 9), 1), ZERO_ONE_ONE_TWO_TWO_FOUR));
   }
 
   @Test
   public void queryBuilderForSingleSubRegionQueryNotEnoughRangesExactSelectivity() {
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
-    checkQueryBuilderForSingleSubRegionQueryNotEnoughRanges(combiner, false);
+    checkQueryBuilderForSingleSubRegionQueryNotEnoughRangesExactSelectivity(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkQueryBuilderForSingleSubRegionQueryNotEnoughRangesExactSelectivity(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkQueryBuilderForSingleSubRegionQueryNotEnoughRangesExactSelectivity(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> combiner = ListConcatCombiner.unbounded();
+    checkQueryBuilderForSingleSubRegionQueryNotEnoughRanges(
+      combiner, tFactory, rangeHome, vFactory, false);
   }
 
   @Test
   public void queryBuilderForSingleSubRegionQueryNotEnoughRangesOverSelectivity() {
-    final FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> combiner = ListConcatCombiner.unbounded();
+    checkQueryBuilderForSingleSubRegionQueryNotEnoughRangesOverSelectivity(
+      longFactory, LongRangeHome.INSTANCE, longContentFactory);
+    checkQueryBuilderForSingleSubRegionQueryNotEnoughRangesOverSelectivity(
+      bigIntegerFactory, BigIntegerRangeHome.INSTANCE, bigIntegerContentFactory);
+  }
+
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkQueryBuilderForSingleSubRegionQueryNotEnoughRangesOverSelectivity(
+    Function<Long, T> tFactory, RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory) {
+    final FilterCombiner<RangeListFilter<T, V, R>, V, R> combiner = ListConcatCombiner.unbounded();
     checkQueryBuilderForSingleSubRegionQueryNotEnoughRanges(
-      new FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange>() {
+      new FilterCombiner<RangeListFilter<T, V, R>, V, R>() {
         @Override
-        public SelectiveFilter<RangeListFilter<Long, LongContent, LongRange>> combine(
-          FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> firstFilteredRange,
-          FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange> secondFilteredRange,
-          LongContent gapEstimate) {
+        public SelectiveFilter<RangeListFilter<T, V, R>> combine(
+          FilteredIndexRange<RangeListFilter<T, V, R>, R> firstFilteredRange,
+          FilteredIndexRange<RangeListFilter<T, V, R>, R> secondFilteredRange, V gapEstimate) {
           return SelectiveFilter.of(
             combiner.combine(firstFilteredRange, secondFilteredRange, gapEstimate).getFilter(),
             true);
         }
-      }, true);
+      }, tFactory, rangeHome, vFactory, true);
   }
 
-  private void checkQueryBuilderForSingleSubRegionQueryNotEnoughRanges(
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> filterCombiner,
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void checkQueryBuilderForSingleSubRegionQueryNotEnoughRanges(
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> filterCombiner, Function<Long, T> tFactory,
+    RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory,
     boolean expectedPotentialOverSelectivity) {
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = createBuilderAndVisit010101(
-      filterCombiner, 2, false);
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = createBuilderAndVisit010101(
+      filterCombiner, tFactory, rangeHome, vFactory, 2, false);
     visit0101110(queryBuilder);
     visit011327(queryBuilder);
     visit1100101(queryBuilder);
     // Insert a 5 gap.
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(8, 9), 3), FOUR_SIX_FOUR_SIX_FOUR_SIX));
-    List<FilteredIndexRange<RangeListFilter<Long, LongContent, LongRange>, LongRange>> expectedList = Lists.newArrayList();
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(8, 9), 3), FOUR_SIX_FOUR_SIX_FOUR_SIX));
+    List<FilteredIndexRange<RangeListFilter<T, V, R>, R>> expectedList = new ArrayList<>();
     expectedList.add(FilteredIndexRange.of(
-      TestUtils.ZERO_TWO, new RangeListFilter<>(
-        ImmutableList.of(TestUtils.ZERO_TWO), false, Level.FINE, LongRangeHome.INSTANCE),
-      expectedPotentialOverSelectivity));
-    expectedList.add(FilteredIndexRange.of(TestUtils.FOUR_EIGHT, new RangeListFilter<>(
-      ImmutableList.of(TestUtils.FOUR_EIGHT), false, Level.FINE, LongRangeHome.INSTANCE), false));
-    Query<RangeListFilter<Long, LongContent, LongRange>, LongRange> actual = queryBuilder.get();
+      rangeHome.of(tFactory.apply(0L), tFactory.apply(2L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(0L), tFactory.apply(2L))), false, Level.FINE,
+        rangeHome), expectedPotentialOverSelectivity));
+    expectedList.add(FilteredIndexRange.of(
+      rangeHome.of(tFactory.apply(4L), tFactory.apply(8L)),
+      new RangeListFilter<>(
+        ImmutableList.of(rangeHome.of(tFactory.apply(4L), tFactory.apply(8L))), false, Level.FINE,
+        rangeHome), false));
+    Query<RangeListFilter<T, V, R>, R> actual = queryBuilder.get();
     Assert.assertEquals(Query.of(expectedList), actual);
     Assert.assertEquals(expectedPotentialOverSelectivity, actual.isPotentialOverSelectivity());
   }
 
-  private void visit1100101(
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder) {
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(4, 9), 2), FOUR_EIGHT_ZERO_ONE_ZERO_ONE));
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void visit1100101(
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder) {
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(4, 9), 2), FOUR_EIGHT_ZERO_ONE_ZERO_ONE));
   }
 
-  private static void visit0101110(
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder) {
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(1, 9), 0), ZERO_ONE_ZERO_ONE_FOUR_FIVE));
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> void visit0101110(
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder) {
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(1, 9), 0), ZERO_ONE_ZERO_ONE_FOUR_FIVE));
   }
 
-  private static QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> createBuilderAndVisit010101(
-    FilterCombiner<RangeListFilter<Long, LongContent, LongRange>, LongContent, LongRange> intervalCombiner,
-    int maxRanges, boolean alwaysRemoveVacuum) {
-    RegionInspector<RangeListFilter<Long, LongContent, LongRange>, LongContent> regionInspector = SimpleRegionInspector.create(
-      ImmutableList.of(TestUtils.ZERO_TEN_ZERO_ONE_ZERO_TEN), new LongContent(1),
-      RangeListFilter.creator(Level.FINE, LongRangeHome.INSTANCE), LongRangeHome.INSTANCE,
-      TestUtils.ZERO_LONG_CONTENT);
-    QueryBuilder<RangeListFilter<Long, LongContent, LongRange>, LongRange> queryBuilder = BacktrackingQueryBuilder.create(
-      regionInspector, intervalCombiner, maxRanges, alwaysRemoveVacuum, LongRangeHome.INSTANCE,
-      TestUtils.ZERO_LONG_CONTENT);
+  private static <T extends Comparable<T>, V extends Content<V>, R extends Range<T, V>> QueryBuilder<RangeListFilter<T, V, R>, R> createBuilderAndVisit010101(
+    FilterCombiner<RangeListFilter<T, V, R>, V, R> intervalCombiner, Function<Long, T> tFactory,
+    RangeHome<T, V, R> rangeHome, Function<Long, V> vFactory, int maxRanges,
+    boolean alwaysRemoveVacuum) {
+    R zeroTen = rangeHome.of(tFactory.apply(0L), tFactory.apply(10L));
+    R zeroOne = rangeHome.of(tFactory.apply(0L), tFactory.apply(1L));
+    RegionInspector<RangeListFilter<T, V, R>, V> regionInspector = SimpleRegionInspector.create(
+      ImmutableList.of(ImmutableList.of(zeroTen, zeroOne, zeroTen)), vFactory.apply(1L),
+      RangeListFilter.creator(Level.FINE, rangeHome), rangeHome, vFactory.apply(0L));
+    QueryBuilder<RangeListFilter<T, V, R>, R> queryBuilder = BacktrackingQueryBuilder.create(
+      regionInspector, intervalCombiner, maxRanges, alwaysRemoveVacuum, rangeHome,
+      vFactory.apply(0L));
     Assert.assertEquals(Query.emptyQuery(), queryBuilder.get());
-    Assert.assertFalse(queryBuilder.visit(
-      new Pow2LengthBitSetRange(TestUtils.createBitVector(0, 9), 0), ZERO_ONE_ZERO_ONE_ZERO_ONE));
+    Assert.assertFalse(queryBuilder.visit(new Pow2LengthBitSetRange(
+      TestUtils.createBitVector(0, 9), 0), ZERO_ONE_ZERO_ONE_ZERO_ONE));
     return queryBuilder;
   }
 }

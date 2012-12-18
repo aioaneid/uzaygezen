@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -193,7 +194,10 @@ public final class LongBitVector implements BitVector, Cloneable {
 
   @Override
   public int nextClearBit(int fromIndex) {
-    checkIndex(fromIndex);
+    Preconditions.checkArgument(fromIndex >= 0);
+    if (fromIndex >= size) {
+      return -1;
+    }
     long w = ~data & (WORD_MASK << fromIndex);
     int tcb = Long.numberOfTrailingZeros(w);
     return tcb == size ? -1 : tcb;
@@ -201,7 +205,10 @@ public final class LongBitVector implements BitVector, Cloneable {
 
   @Override
   public int nextSetBit(int fromIndex) {
-    checkIndex(fromIndex);
+    Preconditions.checkArgument(fromIndex >= 0);
+    if (fromIndex >= size) {
+      return -1;
+    }
     long w = data & (WORD_MASK << fromIndex);
     int tcb = Long.numberOfTrailingZeros(w);
     return tcb == 64 ? -1 : tcb;
@@ -319,6 +326,22 @@ public final class LongBitVector implements BitVector, Cloneable {
   public long toLong() {
     return data;
   }
+
+  @Override
+  public BigInteger toBigInteger() {
+    final BigInteger result;
+    if (data >= 0) {
+      result = BigInteger.valueOf(data);
+    } else {
+      BigInteger missingLowestBit = BigInteger.valueOf(data >>> 1).shiftLeft(1);
+      if ((data & 1) == 1) {
+        result = missingLowestBit.setBit(0);
+      } else {
+        result = missingLowestBit;
+      }
+    }
+    return result;
+  }
   
   public void copyFrom(long value) {
     Preconditions.checkArgument(64 - Long.numberOfLeadingZeros(value) <= size, "value doesn't fit");
@@ -334,8 +357,8 @@ public final class LongBitVector implements BitVector, Cloneable {
       // 0, positives, Long.MAX_VALUE, Long.MIN_VALUE, negatives, -1
       long x = data + Long.MIN_VALUE;
       long y = o.toExactLong() + Long.MIN_VALUE;
-      cmp = x < y ? -1 : (x == y ? 0 : +1);
-      assert Long.signum(cmp) == Long.signum(
+      cmp = Long.compare(x, y);
+      assert Integer.signum(cmp) == Integer.signum(
           BitSetComparator.INSTANCE.compare(toBitSet(), o.toBitSet()));
     } else {
       cmp = BitSetComparator.INSTANCE.compare(toBitSet(), o.toBitSet());
@@ -563,5 +586,14 @@ public final class LongBitVector implements BitVector, Cloneable {
     Preconditions.checkArgument(0 <= bitCount & bitCount <= size, "bitCount is out of range");
     // Only bitCount == 64 is affected by xoring with (bitCount >> 6). 
     return (data & (((1L << bitCount) ^ (bitCount >> 6)) - 1)) == 0;
+  }
+
+  @Override
+  public void copyFrom(BigInteger s) {
+    Preconditions.checkArgument(s.signum() >= 0, s);
+    Preconditions.checkArgument(s.bitLength() <= size());
+    // Note that the long value will be negative iff bitLength == 644 and bit 63
+    // is set.
+    copyFrom(s.longValue());
   }
 }

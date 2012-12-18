@@ -29,7 +29,7 @@ public class PlainFilterCombinerTest {
   @Test
   public void combine() {
     Object filter = new Object();
-    PlainFilterCombiner<Object, Long, LongContent, LongRange> combiner = new PlainFilterCombiner<Object, Long, LongContent, LongRange>(
+    PlainFilterCombiner<Object, Long, LongContent, LongRange> combiner = new PlainFilterCombiner<>(
       filter);
     for (int i = 2; --i >= 0;) {
       for (int j = 2; --j >= 0;) {
