@@ -3,21 +3,19 @@
 
 == Multi-Dimensional Space Specification ==
 
-Before doing anything useful the library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object. For compact Hilbert index and inverse calculation there are no limitations on the number of bits. For query building, the total precision must not exceed 62. In general it's a good idea to keep the precision of each dimension as small as possible.
+Before doing anything useful the library needs to know the specification of the multi-dimensional space, that is, how many dimensions there are, and also the precision (number of bits) for each dimension. All this information is captured in a *!MultiDimensionalSpec* object. There are no practical limitations on the number of bits of each dimension or on the number of dimensions. For query building, if the total precision is less than 63 then the query logic may be executed using the (possibly faster) class `Long` and its related classes `LongContent`, `LongRange` and `LongRangeHome`, while `BigInteger` and its related classes `BigIntegerContent`, `BigIntegerRange` and `BigIntegerRangeHome` serve the creation of queries in arbitrary-precision multidimensional spaces. In general it's a good idea to keep the total precision of the data space as small as possible.
 
 == Fixed Size Bit Vector ==
 
-The coordinates of a point in the multi-dimensional space need to be first represented as a `BitVector[]`. If the coordinates are of type `long` or `BitSet`, the corresponding bit vectors can be created using `BitVectorFactories.OPTIMAL.apply(precision)`, and then using the `copyFrom(long/BitSet)` overloads. Larger values are accepted via their little endian representation by the method `copyFrom(long[])`, with a word size of 64 bits. Big endian representations are accepted via the method `copyFromBigEndian(byte[])`, with a word size of 8 bits.
-
-To transform from a bit vector into `long` use `toExactLong()`; for `BitSet` use `toBitSet()`; for little endian `long[]` use `toLongArray()`; for big endian `byte[]` use `toBigEndianByteArray()`.
+The coordinates of a point in a multi-dimensional space are represented as an array of type `BitVector[]`. If the coordinates are originally of type `long`, `BitSet`, `BigInteger`, big-endian `byte[]` or little-endian `long[]` or the corresponding bit vectors can be created empty by invoking `BitVectorFactories.OPTIMAL.apply(precision)` and then initialised by calling the `copyFrom(long/BitSet/BigInteger/long[])` overloads or `copyFromBigEndian(byte[])`. Methods for the reverse transformation are also provided: `toExactLong()`, `toBitSet()`, `toBigInteger()`, `toBigEndianByteArray()` and `toLongArray()`, respectively.
 
 == Compact Hilbert Index Mappings ==
 
 For performance reasons some methods need a pre-allocated output parameter to be passed in. To compute an index, call `SpaceFillingCurve.index(point, 0, index)` with a pre-allocated index bit vector of size `MultiDimensionalSpec.sumBitsPerDimension()`.
 
-To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated point array.
+To extract the coordinates back from an index, use `SpaceFillingCurve.index(index, point)` with a pre-allocated coordinate array.
 
-Here's an example showing how to compute the hilbert index for two dimensions, each with just 2 bits, together with the inverse hilbert index, recovering the original point:
+Here's an example showing how to compute the !Hilbert index for two dimensions, each with just 2 bits, together with the inverse !Hilbert index, recovering therefore the original point:
 
 {{{
 CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {2, 2});
@@ -73,61 +71,36 @@ List<LongRange> criterion = new ArrayList<LongRange>(min.length);
 for (int i = 0; i < min.length; ++i) {
     criterion.add(LongRange.of(min[i], max[i] + 1));
 }
-RegionInspector<Object> regionInspector = SimpleRegionInspector.create(
-    ImmutableList.<List<LongRange>>of(criterion), 1L,
-    Functions.constant(FILTER));
+LongContent zero = new LongContent(0L);
+RegionInspector<Object, LongContent> simpleRegionInspector = SimpleRegionInspector.create(
+      x, one, Functions.constant(filter), LongRangeHome.INSTANCE, zero);
 final int maxFilteredRanges = 20;
 // PlainFilterCombiner since we're not using sub-ranges here
-QueryBuilder<Object> queryBuilder = BacktrackingQueryBuilder.create(
-    regionInspector, PlainFilterCombiner.INSTANCE,
-    maxFilteredRanges, true);
+PlainFilterCombiner<Object, Long, LongContent, LongRange> combiner = new PlainFilterCombiner<>(filter);
+QueryBuilder<Object, BigIntegerRange> queryBuilder = BacktrackingQueryBuilder.create(
+      regionInspector, combiner, maxRanges, true, BigIntegerRangeHome.INSTANCE, zero);
 // sfc is of type SpaceFillingCurve, such as an instance of CompactHilbertIndex
 sfc.accept(new ZoomingSpaceVisitorAdapter(sfc, queryBuilder));
-Query<Object> query = queryBuilder.get();
-List<FilteredIndexRange<Object>> ranges = query.getFilteredIndexRanges();
+Query<Object, LongRange> query = queryBuilder.get();
+List<FilteredIndexRange<Object, LongRange>> ranges = query.getFilteredIndexRanges();
 }}}
 Then construct an SQL query that selects between `ranges.get(i).getIndexRange().getStart()` and `ranges.get(i).getIndexRange().getEnd() - 1` inclusive at both ends, and for those ranges returning `true` from `ranges.get(i).isPotentialOverSelectivity()` add a where clause based on the coordinate values if stored redundantly in the database. Note that those ranges that return `false` from `ranges.get(i).isPotentialOverSelectivity()` are guaranteed to not select any extraneous points. Also, if maxFilteredRanges is made large enough then it is guaranteed that no ranges will have potential over-selectivity, but the number of ranges can easily grow too large.
 
 == Queries in Mostly Read-Only Tables ==
 
-Optionally for a mostly read-only table, after each modification the table can be scanned and a limited rolled-up version of the table information extracted in memory and used to significantly speed up both query building and query execution, the latter as a result of better queries being produced. The idea is that the table is analysed to see which regions have points, and which regions have more points than others and the information is aggregated into a tree-shaped cache of specified size.
+Optionally for a mostly read-only table, after each modification the table can be scanned to build a limited rolled-up version of the full table in memory and used to significantly speed up both query building and query execution, the latter as a result of better queries being produced. The idea is that the table is analysed to see which regions have points and which regions have more points than others and the information is aggregated into a tree-shaped cache of specified size. To ensure correctness, the cache needs to be updated whenever there are new data points in the underlying data store in regions that the cache regards as empty. The API for caching is centered around `StreamingRollup`, `BoundedRollup` and `Pow2LengthBitSetRangeFactory`.
 
-Although not a complete example, this snippet of code shows the main steps involved in the analysis phase that involves one full table scan:
-{{{
-int[] elementLengths =
-    PrimitiveArrays.toIntArray(new HilbertIndexMasks(sfc.getSpec()).cardinalities());
-BitVector[] path = new BitVector[elementLengths.length];
-for (int i = 0; i < path.length; ++i) {
-  path[i] = BitVectorFactories.OPTIMAL.apply(elementLengths[path.length - i - 1]);
-}
-StreamingRollup<BitVector, CountingDoubleArray> rollup = BoundedRollup.create(
-    CountingDoubleArray.newEmptyValue(0), cacheSize);
-// for each row, ordered by the hilbertIndex column:
-  for (int i = 0; i < path.length; ++i) {
-    path[i] = path[i].clone();
-  }
-  BitVectorMath.split(hilbertIndex, path);
-  rollup.feedRow(Iterators.forArray(path, 0, path.length),
-      new CountingDoubleArray(ArrayUtils.EMPTY_DOUBLE_ARRAY));
-MapNode<BitVector, CountingDoubleArray> rolledupTree = rollup.finish();
-Pow2LengthBitSetRangeFactory<CountingDoubleArray> factory =
-    Pow2LengthBitSetRangeFactory.create(PrimitiveArrays.asList(elementLengths));
-Map<Pow2LengthBitSetRange, NodeValue<CountingDoubleArray>> rolledupMap = factory.apply(rolledupTree);
-}}}
+== HBase example ==
 
-Then all that's left is to decorate the region inspector for query building purposes:
-{{{
-RegionInspector regionInspector =
-    MapRegionInspector.create(rolledupMap, simpleRegionInspector, false);
-}}}
+The test case `HBaseQueryTest` includes a complete example based on [http://blog.erdemagaoglu.com/post/1254694314/unit-testing-hbase-applications MockHTable] which is an in-memory implementation of HBase's HTableInterface API. The mentioned test case populates a table with gaussian data from a three-dimensional space with a total precision that is larger than 62 bits and it queries it either using the non-caching API or the caching wrapper.
 
 == Other Considerations ==
 
-At this point very little performance testing has been done, and although the index and inverse computation routines are pretty stable, significant changes might be made in the query building mechanism in the future. Also, note that many relational databases provide built-in multi-indexing support based on R-trees and not only, which should be more efficient where available than the database independent approach employed here.
+At this point very little performance testing has been done, and although the index and inverse computation routines are pretty stable, significant changes may be made in the query building mechanism in the future. Also, note that many relational databases provide built-in multi-indexing support based on R-trees and not only, which may be more efficient where available than the database independent approach employed here.
 
-From a stability point of view, although this version is marked as 0.1, there are extensive unit tests for most of the functionality with very good coverage. The unit tests should also serve as further usage examples.
+From a stability point of view, although this version is marked as 0.2, there are extensive unit tests for most of the functionality with very good coverage. The unit tests should also serve as further usage examples.
 
-Dependencies: The library has only 2 dependencies: [http://code.google.com/p/google-collections Google Collections] 20080819 and [http://commons.apache.org/lang Apache Commons Lang] 2.4. The test code also depends on [http://www.easymock.org EasyMock] 2.0 and [http://www.junit.org JUnit] 3.8.1.
+Dependencies: The library has only 3 direct dependencies: `com.google.guava/guava`, `log4j/log4j` and `org.apache.commons/commons-lang3`. The test code also depends on `junit/junit`, `org.easymock/easymock`, `org.apache.hadoop/hadoop-core` and `org.apache.hbase/hbase`.
 
 == Useful Links ==
 
