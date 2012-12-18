@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+import java.math.BigInteger;
 import java.util.BitSet;
 
 import org.junit.Assert;
@@ -33,19 +34,40 @@ public class LongBitVectorTest {
     LongBitVector negativeX = new LongBitVector(64);
     LongBitVector y = new LongBitVector(64);
     LongBitVector negativeY = new LongBitVector(64);
-    for (long i = 1 << n; --i >= 0; ) {
+    // -=17 just to make it faster. Ideally we should use just plain --.
+    for (long i = 1 << n; (i -= 17) >= 0; ) {
       x.copyFrom(i);
       negativeX.copyFrom(-i);
-      for (long j = 1 << n; --j >= 0; ) {
+      for (long j = 1 << n; (j -= 17) >= 0; ) {
         y.copyFrom(j);
         negativeY.copyFrom(-j);
-        Assert.assertEquals(Long.valueOf(i).compareTo(Long.valueOf(j)), Long.signum(x.compareTo(y)));
+        Assert.assertEquals(Long.compare(i, j), Integer.signum(x.compareTo(y)));
         Assert.assertEquals(j == 0 ? Long.signum(i)
-            : (i == 0 ? -1 : Long.valueOf(-i).compareTo(Long.valueOf(-j))),
-            Long.signum(negativeX.compareTo(negativeY)));
-        Assert.assertEquals(j == 0 ? Long.signum(i) : -1, Long.signum(x.compareTo(negativeY)));
-        Assert.assertEquals(j == 0 ? -Long.signum(i) : +1, Long.signum(negativeY.compareTo(x)));
+            : (i == 0 ? -1 : Long.compare(-i, -j)),
+            Integer.signum(negativeX.compareTo(negativeY)));
+        Assert.assertEquals(j == 0 ? Long.signum(i) : -1, Integer.signum(x.compareTo(negativeY)));
+        Assert.assertEquals(j == 0 ? -Long.signum(i) : +1, Integer.signum(negativeY.compareTo(x)));
       }
+    }
+  }
+  
+  @Test
+  public void toBigInteger() {
+    int n = 10;
+    LongBitVector x = new LongBitVector(64);
+    LongBitVector negativeX = new LongBitVector(64);
+    for (long i = 1 << n; --i >= 0; ) {
+      x.copyFrom(i);
+      Assert.assertEquals(BigInteger.valueOf(i), x.toBigInteger());
+      long j = -i;
+      negativeX.copyFrom(j);
+      BigInteger expected = BigInteger.ZERO;
+      for (int k = 0; k < 64; ++k) {
+        if (((j >> k) & 1) == 1) {
+          expected = expected.setBit(k);
+        }
+      }
+      Assert.assertEquals(expected, negativeX.toBigInteger());
     }
   }
   

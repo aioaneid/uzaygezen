@@ -16,11 +16,22 @@
 package com.google.uzaygezen.core.ranges;
 
 /**
+ * Non-empty interval with non-negative {@code long} inclusive start and
+ * exclusive end.
+ * 
  * @author Daniel Aioanei
  */
 public interface Range<T, V> extends Measurable<V> {
 
-    T getStart();
-    
-    T getEnd();
+  /**
+   * @return the inclusive start of the interval
+   */
+  T getStart();
+
+  /**
+   * @return the exclusive end of the interval
+   */
+  T getEnd();
+
+  boolean contains(T point);
 }

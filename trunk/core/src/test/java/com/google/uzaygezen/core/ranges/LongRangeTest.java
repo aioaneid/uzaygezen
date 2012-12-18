@@ -91,7 +91,7 @@ public class LongRangeTest {
   @Test
   public void equalsAndHashCode() {
     MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, TestUtils.ONE_TEN, true);
-    MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, LongRange.of(1, 10), true);
+    MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, new LongRange(1, 10), true);
     MoreAsserts.checkEqualsAndHashCodeMethods(TestUtils.ONE_TEN, TestUtils.ZERO_TEN, false);
   }
 
@@ -106,13 +106,13 @@ public class LongRangeTest {
     Assert.assertTrue(TestUtils.ONE_TEN.toString().contains("1"));
     Assert.assertTrue(TestUtils.ONE_TEN.toString().contains("10"));
   }
-
+  
   @Test
   public void contains() {
-    Assert.assertFalse(TestUtils.ONE_TEN.contains(0));
-    Assert.assertTrue(TestUtils.ONE_TEN.contains(1));
-    Assert.assertTrue(TestUtils.ONE_TEN.contains(5));
-    Assert.assertFalse(TestUtils.ONE_TEN.contains(10));
-    Assert.assertFalse(TestUtils.ONE_TEN.contains(11));
+    Assert.assertFalse(TestUtils.ONE_TEN.contains(0L));
+    Assert.assertTrue(TestUtils.ONE_TEN.contains(1L));
+    Assert.assertTrue(TestUtils.ONE_TEN.contains(5L));
+    Assert.assertFalse(TestUtils.ONE_TEN.contains(10L));
+    Assert.assertFalse(TestUtils.ONE_TEN.contains(11L));
   }
 }

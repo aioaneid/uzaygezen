@@ -16,6 +16,7 @@
 
 package com.google.uzaygezen.core;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -158,11 +159,12 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
 
   @Override
   public int nextClearBit(int fromIndex) {
+    Preconditions.checkArgument(fromIndex >= 0);
     int ncb = bitset.nextClearBit(fromIndex);
-    if (ncb == size) {
+    if (ncb >= size) {
       ncb = -1;
     }
-    assert -1 <= ncb & ncb < size();
+    assert -1 <= ncb & ncb < size;
     return ncb;
   }
 
@@ -281,6 +283,7 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
 
   @Override
   public int compareTo(BitVector o) {
+    checkSize(o);
     return BitSetComparator.INSTANCE.compare(bitset, toPotentiallySharedBitSet(o));
   }
 
@@ -441,6 +444,11 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
     ArrayUtils.reverse(a);
     return a;
   }
+
+  @Override
+  public BigInteger toBigInteger() {
+    return new BigInteger(isEmpty() ? 0 : 1, toBigEndianByteArray());
+  }
   
   @Override
   public void copyFrom(long[] array) {
@@ -484,5 +492,11 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
     Preconditions.checkArgument(0 <= bitCount & bitCount <= size, "bitCount is out of range");
     int firstSetBit = bitset.nextSetBit(0);
     return firstSetBit == -1 | firstSetBit >= bitCount;
+  }
+
+  @Override
+  public void copyFrom(BigInteger s) {
+    byte[] array = BigIntegerMath.nonnegativeBigIntegerToBigEndianByteArrayForBitSize(s, size);
+    copyFromBigEndian(array);
   }
 }

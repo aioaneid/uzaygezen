@@ -18,6 +18,7 @@ package com.google.uzaygezen.core;
 
 import com.google.common.base.Preconditions;
 
+import java.math.BigInteger;
 import java.util.*;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,8 +28,10 @@ import org.apache.commons.lang3.ArrayUtils;
  * It also has methods for easy concatenation and for easy slicing.
  *
  * @author Radu Grigore
+ * @author Daniel Aioanei
  */
 public class LongArrayBitVector implements BitVector {
+  
   private final long[] data;
   private final int size;
 
@@ -293,8 +296,8 @@ public class LongArrayBitVector implements BitVector {
 
   @Override
   public int nextSetBit(int fromIndex) {
-    checkRange(0, size, fromIndex);
-    if (size == 0) {
+    Preconditions.checkArgument(fromIndex >= 0);
+    if (fromIndex >= size) {
       return -1;
     }
     int fromBucket = fromIndex / WORD;
@@ -305,13 +308,15 @@ public class LongArrayBitVector implements BitVector {
     if (fromBucket == data.length) {
       return -1;
     }
-    return WORD * fromBucket + Long.numberOfTrailingZeros(word);
+    int result = WORD * fromBucket + Long.numberOfTrailingZeros(word);
+    assert 0 <= result & result < size;
+    return result;
   }
 
   @Override
   public int nextClearBit(int fromIndex) {
-    checkRange(0, size, fromIndex);
-    if (size == 0) {
+    Preconditions.checkArgument(fromIndex >= 0);
+    if (fromIndex >= size) {
       return -1;
     }
     int fromBucket = fromIndex / WORD;
@@ -549,8 +554,10 @@ public class LongArrayBitVector implements BitVector {
   @Override
   public BitSet toBitSet() {
     BitSet result = new BitSet(size);
-    for (int i = nextSetBit(0); i >= 0; i = nextSetBit(i + 1)) {
-      result.set(i);
+    if (size != 0) {
+      for (int i = nextSetBit(0); i != -1; i = nextSetBit(i + 1)) {
+        result.set(i);
+      }
     }
     return result;
   }
@@ -604,6 +611,11 @@ public class LongArrayBitVector implements BitVector {
   }
 
   @Override
+  public BigInteger toBigInteger() {
+    return new BigInteger(isEmpty() ? 0 : 1, toBigEndianByteArray());
+  }
+  
+  @Override
   public void copyFrom(long[] array) {
     Preconditions.checkArgument(data.length == array.length);
     System.arraycopy(array, 0, data, 0, data.length);
@@ -631,6 +643,12 @@ public class LongArrayBitVector implements BitVector {
   }
 
   @Override
+  public void copyFrom(BigInteger s) {
+    byte[] array = BigIntegerMath.nonnegativeBigIntegerToBigEndianByteArrayForBitSize(s, size);
+    copyFromBigEndian(array);
+  }
+
+  @Override
   public int hashCode() {
     // Imitate BitSet's hashCode.
     long h = 1234;
@@ -649,9 +667,17 @@ public class LongArrayBitVector implements BitVector {
     return size == other.size() &&
         Arrays.equals(data, toPotentiallySharedLongArray(other));
   }
+  
+  private void checkSize(BitVector other) {
+    if (other.size() != this.size()) {
+      throw new IllegalArgumentException("Sizes are not equal. " + 
+          "this:" + size + " other:" + other.size());
+    }
+  }
 
   @Override
   public int compareTo(BitVector o) {
+    checkSize(o);
     return compareTo(toPotentiallySharedLongArray(o));
   }
 
@@ -716,20 +742,17 @@ public class LongArrayBitVector implements BitVector {
   private int compareTo(long[] other) {
     int i;
     for (i = data.length; --i >= 0 && data[i] == other[i];);
-    if (i < 0) {
-      return 0;
-    }
-    if (data[i] < 0 && other[i] > 0) {
-      return +1;
-    }
-    if (data[i] > 0 && other[i] < 0) {
-      return -1;
-    }
-    if (data[i] < other[i]) {
-      return -1;
+    final int cmp;
+    if (i == -1) {
+      cmp = 0;
     } else {
-      return +1;
+      // 0, positives, Long.MAX_VALUE, Long.MIN_VALUE, negatives, -1
+      long x = data[i] + Long.MIN_VALUE;
+      long y = other[i] + Long.MIN_VALUE;
+      cmp = Long.compare(x, y);
+      assert cmp != 0;
     }
+    return cmp;
   }
 
   private boolean intersects(long[] other) {
