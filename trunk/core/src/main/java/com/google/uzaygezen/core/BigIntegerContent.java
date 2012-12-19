@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.uzaygezen.core.ranges;
+package com.google.uzaygezen.core;
 
 import java.math.BigInteger;
 
