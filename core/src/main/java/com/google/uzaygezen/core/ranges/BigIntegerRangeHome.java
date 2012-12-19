@@ -19,6 +19,7 @@ package com.google.uzaygezen.core.ranges;
 import java.math.BigInteger;
 import java.util.List;
 
+import com.google.uzaygezen.core.BigIntegerContent;
 import com.google.uzaygezen.core.Pow2LengthBitSetRange;
 
 /**

@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.uzaygezen.core.BigIntegerContent;
 
 /**
  * @author Richard Garris
