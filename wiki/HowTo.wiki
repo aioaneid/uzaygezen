@@ -15,7 +15,7 @@ For performance reasons some methods need a pre-allocated output parameter to be
 
 To extract the coordinates back from an index, use [https://code.google.com/p/uzaygezen/source/browse/trunk/core/src/main/java/com/google/uzaygezen/core/SpaceFillingCurve.java SpaceFillingCurve]`.index(index, point)` with a pre-allocated coordinate array.
 
-Here's an example showing how to compute the !Hilbert index for two dimensions, each with just 2 bits, together with the inverse !Hilbert index, recovering therefore the original point:
+Here's an example showing how to compute the Hilbert index for two dimensions, each with just 2 bits, together with the inverse Hilbert index, recovering therefore the original point:
 
 {{{
 CompactHilbertCurve chc = new CompactHilbertCurve(new int[] {2, 2});
