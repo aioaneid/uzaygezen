@@ -109,4 +109,4 @@ Dependencies: The library has only 3 direct dependencies: `com.google.guava/guav
 == Useful Links ==
 
   * [http://www.ddj.com/184410998 Space-Filling Curves in Geospatial Applications]
-  * [http://www.cs.dal.ca/research/techreports/2006/CS-2006-07.pdf Compact Hilbert Indices]
+  * [http://www.cs.dal.ca/research/techreports/cs-2006-07 Compact Hilbert Indices]
