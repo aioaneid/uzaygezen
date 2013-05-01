@@ -472,9 +472,8 @@ public final class BitSetBackedBitVector implements BitVector, Cloneable {
     if (len == 0) {
       return;
     }
-    // Unfortunately there is no Byte.numberOfLeadingZeros method.
     Preconditions.checkArgument(
-        Integer.numberOfLeadingZeros(array[0] & 0xFF) >= (len << 3) - size,
+        MathUtils.numberOfLeadingZeros(array[0]) >= (len << 3) - size,
         "Some bit positions are too high.");
     BitSet bs;
     ArrayUtils.reverse(array);

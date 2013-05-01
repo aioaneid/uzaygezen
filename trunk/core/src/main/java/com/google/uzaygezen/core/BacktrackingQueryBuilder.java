@@ -32,7 +32,7 @@ import com.google.uzaygezen.core.ranges.RangeHome;
  * the number of ranges they can accept in a query. But the builder can also be
  * configured to never try to join together two filtered ranges, by specifying a
  * very high maximum number of ranges and that it should never try to combine
- * two ranges with vacuum in between. In the latter case the filters a
+ * two ranges with vacuum in between. In the latter case the filters are
  * guaranteed not to be used at all, unless they are created by the region
  * inspector itself.
  * 

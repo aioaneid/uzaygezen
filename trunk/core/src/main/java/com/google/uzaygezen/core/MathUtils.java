@@ -106,4 +106,13 @@ public class MathUtils {
         | ((bytes[6] & 0xFFL) << 8) | ((bytes[7] & 0xFFL) << 0);
     return Double.longBitsToDouble(asLong);
   }
+  
+  /**
+   * Unfortunately there is no Byte.numberOfLeadingZeros method.
+   * 
+   * @return Number of leading zeroes (up to 8) of a byte.
+   */
+  public static int numberOfLeadingZeros(byte b) {
+    return Integer.numberOfLeadingZeros(b & 0xFF) - 24;
+  }
 }
