@@ -78,4 +78,14 @@ public class MathUtilsTest {
     BigInteger gcd = iAsBigInt.gcd(jAsBigInt);
     Assert.assertEquals(MathUtils.gcd(offset + i, offset + j), gcd.intValue());
   }
+  
+  @Test
+  public void numberOfLeadingZerosOfByte() {
+    for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; ++i) {
+      byte b = (byte) i;
+      int actual = MathUtils.numberOfLeadingZeros(b);
+      int expected = b < 0 ? 0 : (b == 0 ? 8 : Integer.numberOfLeadingZeros(i) - 24);
+      Assert.assertEquals(expected, actual);
+    }
+  }
 }
