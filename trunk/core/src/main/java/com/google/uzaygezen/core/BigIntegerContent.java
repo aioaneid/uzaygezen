@@ -18,6 +18,9 @@ package com.google.uzaygezen.core;
 
 import java.math.BigInteger;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.google.common.base.Preconditions;
 import com.google.uzaygezen.core.Content;
 
@@ -32,6 +35,10 @@ public class BigIntegerContent implements Content<BigIntegerContent> {
   public BigIntegerContent(BigInteger v) {
     Preconditions.checkArgument(v.signum() >= 0);
     this.value = v;
+  }
+  
+  public BigInteger value() {
+    return value;
   }
 
   @Override
@@ -76,5 +83,10 @@ public class BigIntegerContent implements Content<BigIntegerContent> {
   @Override
   public BigIntegerContent clone() {
     return new BigIntegerContent(value);
+  }
+  
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
 }
