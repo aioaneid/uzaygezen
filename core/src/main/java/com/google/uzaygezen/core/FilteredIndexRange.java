@@ -107,4 +107,13 @@ public class FilteredIndexRange<F, R> {
   public static <F, R> Predicate<FilteredIndexRange<F, R>> potentialOverSelectivityExtractor() {
     return (Predicate) IS_POTENTIAL_OVER_SELECTIVITY;
   }
+  
+  public static <F, T, V extends AdditiveValue<V>, R extends Range<T, V>> V sumRangeLengths(
+    Iterable<FilteredIndexRange<F, R>> iterable, V zero) {
+    V sum = zero.clone();
+    for (FilteredIndexRange<F, R> r : iterable) {
+      sum.add(r.getIndexRange().length());
+    }
+    return sum;
+  }
 }

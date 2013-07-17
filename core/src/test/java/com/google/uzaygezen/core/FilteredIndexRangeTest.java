@@ -19,6 +19,7 @@ package com.google.uzaygezen.core;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.uzaygezen.core.ranges.LongRange;
 
 /**
@@ -46,5 +47,18 @@ public class FilteredIndexRangeTest {
     Assert.assertSame(TestUtils.ONE_TEN, filteredIndexRange.getIndexRange());
     Assert.assertEquals(0, filteredIndexRange.getFilter().longValue());
     Assert.assertFalse(filteredIndexRange.isPotentialOverSelectivity());
+  }
+  
+  @Test
+  public void sumRangeLengths() {
+    FilteredIndexRange<String, LongRange> a = new FilteredIndexRange<>(
+      TestUtils.EIGHT_TEN, "", false);
+    FilteredIndexRange<String, LongRange> b = new FilteredIndexRange<>(
+      TestUtils.THREE_SEVEN, "", false);
+    LongContent actual = FilteredIndexRange.sumRangeLengths(
+      ImmutableList.of(a, b), TestUtils.ZERO_LONG_CONTENT);
+    Assert.assertEquals(new LongContent(6), actual);
+    // The zero prototype was not modified.
+    Assert.assertTrue(TestUtils.ZERO_LONG_CONTENT.isZero());
   }
 }
