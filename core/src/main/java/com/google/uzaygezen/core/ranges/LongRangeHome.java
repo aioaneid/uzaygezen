@@ -17,6 +17,7 @@ package com.google.uzaygezen.core.ranges;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import com.google.uzaygezen.core.LongContent;
 import com.google.uzaygezen.core.Pow2LengthBitSetRange;
 
@@ -36,6 +37,9 @@ public enum LongRangeHome implements RangeHome<Long, LongContent, LongRange> {
   public LongRange toRange(Pow2LengthBitSetRange bitSetRange) {
     long inclusiveStart = bitSetRange.getStart().toExactLong();
     long delta = 1L << bitSetRange.getLevel();
+    Preconditions.checkArgument(
+        bitSetRange.getLevel() <= 62,
+        "bitSetRange=%s exceeds 62 bits for a non-negative long.", bitSetRange);
     long exclusiveEnd = inclusiveStart + delta;
     return LongRange.of(inclusiveStart, exclusiveEnd);
   }
