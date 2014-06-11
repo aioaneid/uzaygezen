@@ -4,12 +4,17 @@
   <groupId>com.google.uzaygezen</groupId>
   <artifactId>uzaygezen</artifactId>
   <packaging>pom</packaging>
-  <version>0.2</version>
+  <version>0.2-SNAPSHOT</version>
   <name>Uzaygezen</name>
   <url>http://code.google.com/p/uzaygezen</url>
   <description>
     Uzaygezen is a library for multidimensional indexing based on space filling curves.
   </description>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
   <issueManagement>
     <system>Google Code</system>
     <url>http://code.google.com/p/uzaygezen/issues/list</url>
@@ -28,7 +33,12 @@
     <connection>
       scm:svn:http://uzaygezen.googlecode.com/svn/trunk/
     </connection>
+    <developerConnection>
+      scm:svn:http://uzaygezen.googlecode.com/svn/trunk/
+    </developerConnection>
   </scm>
+  <developers>
+  </developers>
   <build>
     <plugins>
       <plugin>
