@@ -4,11 +4,11 @@
   <groupId>com.google.code.uzaygezen</groupId>
   <artifactId>core</artifactId>
   <packaging>jar</packaging>
-  <version>0.2</version>
+  <version>0.2-SNAPSHOT</version>
   <parent>
     <groupId>com.google.uzaygezen</groupId>
     <artifactId>uzaygezen</artifactId>
-    <version>0.2</version>
+    <version>0.2-SNAPSHOT</version>
   </parent>
   <dependencies>
     <dependency>
