@@ -47,7 +47,7 @@
   </build>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+  </properties>
   <modules>
     <module>core</module>
   </modules>
