@@ -3,7 +3,7 @@
   <groupId>com.google.uzaygezen</groupId>
   <artifactId>uzaygezen</artifactId>
   <packaging>pom</packaging>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2</version>
   <name>Uzaygezen</name>
   <url>http://code.google.com/p/uzaygezen</url>
   <description>
@@ -27,13 +27,13 @@
   </licenses>
   <scm>
     <url>
-      https://uzaygezen.googlecode.com/svn/trunk/
+      https://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
     </url>
     <connection>
-      scm:svn:https://uzaygezen.googlecode.com/svn/trunk/
+      scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
     </connection>
     <developerConnection>
-      scm:svn:https://uzaygezen.googlecode.com/svn/trunk/
+      scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
     </developerConnection>
   </scm>
   <developers>
