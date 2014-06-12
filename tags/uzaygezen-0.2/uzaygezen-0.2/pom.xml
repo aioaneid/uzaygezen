@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.google.uzaygezen</groupId>
+  <artifactId>uzaygezen</artifactId>
+  <packaging>pom</packaging>
+  <version>0.2</version>
+  <name>Uzaygezen</name>
+  <url>http://code.google.com/p/uzaygezen</url>
+  <description>
+    Uzaygezen is a library for multidimensional indexing based on space filling curves.
+  </description>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+  <issueManagement>
+    <system>Google Code</system>
+    <url>http://code.google.com/p/uzaygezen/issues/list</url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>
+      https://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
+    </url>
+    <connection>
+      scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
+    </connection>
+    <developerConnection>
+      scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
+    </developerConnection>
+  </scm>
+  <developers>
+  </developers>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+	  <compilerArgument>-Xlint:all</compilerArgument>
+	  <showWarnings>true</showWarnings>
+	  <showDeprecation>true</showDeprecation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <modules>
+    <module>core</module>
+  </modules>
+</project>
