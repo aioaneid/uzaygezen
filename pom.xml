@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.uzaygezen</groupId>
   <artifactId>uzaygezen</artifactId>
   <packaging>pom</packaging>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2</version>
   <name>Uzaygezen</name>
   <url>http://code.google.com/p/uzaygezen</url>
   <description>
@@ -28,13 +27,13 @@
   </licenses>
   <scm>
     <url>
-      http://uzaygezen.googlecode.com/svn/trunk/
+      http://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
     </url>
     <connection>
-      scm:svn:http://uzaygezen.googlecode.com/svn/trunk/
+      scm:svn:http://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
     </connection>
     <developerConnection>
-      scm:svn:http://uzaygezen.googlecode.com/svn/trunk/
+      scm:svn:http://uzaygezen.googlecode.com/svn/tags/uzaygezen-0.2
     </developerConnection>
   </scm>
   <developers>
