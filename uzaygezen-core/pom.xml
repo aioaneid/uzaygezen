@@ -3,12 +3,12 @@
   <groupId>com.google.uzaygezen</groupId>
   <artifactId>uzaygezen-core</artifactId>
   <packaging>jar</packaging>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2</version>
   <name>Uzaygezen-core</name>
   <parent>
     <groupId>com.google.uzaygezen</groupId>
     <artifactId>uzaygezen</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
   </parent>
   <dependencies>
     <dependency>
