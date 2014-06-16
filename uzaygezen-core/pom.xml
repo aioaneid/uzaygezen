@@ -3,7 +3,7 @@
   <groupId>com.google.uzaygezen</groupId>
   <artifactId>uzaygezen-core</artifactId>
   <packaging>jar</packaging>
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <name>Uzaygezen-core</name>
   <parent>
     <groupId>com.google.uzaygezen</groupId>
@@ -51,10 +51,4 @@
       <scope>test</scope>
     </dependency> 
   </dependencies>
-
-  <scm>
-    <connection>scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-core-0.2</connection>
-    <developerConnection>scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-core-0.2</developerConnection>
-    <url>https://uzaygezen.googlecode.com/svn/tags/uzaygezen-core-0.2</url>
-  </scm>
 </project>
