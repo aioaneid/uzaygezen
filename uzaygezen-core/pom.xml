@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.google.code.uzaygezen</groupId>
-  <artifactId>core</artifactId>
+  <groupId>com.google.uzaygezen</groupId>
+  <artifactId>uzaygezen-core</artifactId>
   <packaging>jar</packaging>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <name>Uzaygezen-core</name>
   <parent>
     <groupId>com.google.uzaygezen</groupId>
     <artifactId>uzaygezen</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
   </parent>
   <dependencies>
     <dependency>
