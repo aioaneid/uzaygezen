@@ -1,63 +1,60 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.uzaygezen</groupId>
-  <artifactId>uzaygezen</artifactId>
-  <packaging>pom</packaging>
-  <version>0.3-SNAPSHOT</version>
-  <name>Uzaygezen</name>
-  <url>http://code.google.com/p/uzaygezen</url>
-  <description>
-    Uzaygezen is a library for multidimensional indexing based on space filling curves.
-  </description>
+  <artifactId>uzaygezen-core</artifactId>
+  <packaging>jar</packaging>
+  <version>0.2</version>
+  <name>Uzaygezen-core</name>
   <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <groupId>com.google.uzaygezen</groupId>
+    <artifactId>uzaygezen</artifactId>
+    <version>0.2</version>
   </parent>
-  <issueManagement>
-    <system>Google Code</system>
-    <url>http://code.google.com/p/uzaygezen/issues/list</url>
-  </issueManagement>
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.1</version>
+    </dependency> 
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>14.0-rc1</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.1</version>
+      <scope>test</scope>
+    </dependency> 
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>1.1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>0.94.2</version>
+      <scope>test</scope>
+    </dependency> 
+  </dependencies>
+
   <scm>
-    <url>
-      https://uzaygezen.googlecode.com/svn/trunk
-    </url>
-    <connection>
-      scm:svn:https://uzaygezen.googlecode.com/svn/trunk
-    </connection>
-    <developerConnection>
-      scm:svn:https://uzaygezen.googlecode.com/svn/trunk
-    </developerConnection>
+    <connection>scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-core-0.2</connection>
+    <developerConnection>scm:svn:https://uzaygezen.googlecode.com/svn/tags/uzaygezen-core-0.2</developerConnection>
+    <url>https://uzaygezen.googlecode.com/svn/tags/uzaygezen-core-0.2</url>
   </scm>
-  <developers>
-  </developers>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.0</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-	  <compilerArgument>-Xlint:all</compilerArgument>
-	  <showWarnings>true</showWarnings>
-	  <showDeprecation>true</showDeprecation>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  <modules>
-    <module>uzaygezen-core</module>
-  </modules>
 </project>
