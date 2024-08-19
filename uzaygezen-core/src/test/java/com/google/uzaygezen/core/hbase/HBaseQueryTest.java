@@ -18,6 +18,7 @@ package com.google.uzaygezen.core.hbase;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,7 +37,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -93,13 +93,13 @@ public class HBaseQueryTest {
   @Test
   public void queryHBase() throws IOException, InterruptedException {
     MockHTable table = MockHTable.create();
-    final byte[] family = "FAMILY".getBytes(Charsets.ISO_8859_1);
+    final byte[] family = "FAMILY".getBytes(StandardCharsets.ISO_8859_1);
     /*
      * We choose not to store the coordinates themselves, since storing the
      * Hilbert index is sufficient to recover the coordinate values. So let's
      * use a dummy column.
      */
-    final byte[][] qualifiers = {"NICE".getBytes(Charsets.ISO_8859_1),};
+    final byte[][] qualifiers = {"NICE".getBytes(StandardCharsets.ISO_8859_1),};
     MultiDimensionalSpec spec = new MultiDimensionalSpec(Ints.asList(30, 10, 25));
     // Add some data.
     Random rnd = new Random(TestUtils.SEED);
@@ -349,7 +349,7 @@ public class HBaseQueryTest {
         // Put a nice string representation of the data point in the dummy
         // column.
         keyValues[k] = new KeyValue(row, family, qualifiers[k], Arrays.toString(data[i]).getBytes(
-          Charsets.ISO_8859_1));
+          StandardCharsets.ISO_8859_1));
       }
       put.setFamilyMap(ImmutableMap.of(family, Arrays.asList(keyValues)));
       puts[i] = put;
